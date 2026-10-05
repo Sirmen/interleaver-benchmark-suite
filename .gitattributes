@@ -1,0 +1,7 @@
+# Text is strored with LF in the repository and checked out with the platform's own endings. The tables and the figures are binary and must not be touched: a line-ending conversation inside a .mat or .bin file corrupts silently.
+* text=auto
+*.mat binary
+*.bin binary
+*.emf binary
+*.png binary
+*pdf binary
