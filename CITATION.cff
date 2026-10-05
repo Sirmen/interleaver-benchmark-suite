@@ -9,7 +9,7 @@ authors:
 version: "1.0.0"
 date-released: "2026-10-04"
 license: MIT
-repository-code: "https://github.com/USER/interleaver-benchmark-suite"   # TODO
+repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
 doi: "10.5281/zenodo.0000000"                                            # TODO: filled after the first release
 keywords:
   - interleaving
