@@ -7,10 +7,10 @@ authors:
     affiliation: "Piri Reis University, Istanbul, Türkiye"
     orcid: "https://orcid.org/0000-0001-5014-4780"
 version: "1.0.0"
-date-released: "2026-10-04"
+date-released: "2026-10-05"
 license: MIT
 repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
-doi: "10.5281/zenodo.0000000"                                            # TODO: filled after the first release
+doi: "10.5281/zenodo.23170143"           # v1.0.0; all versions: 10.5281/zenodo.23170142
 keywords:
   - interleaving
   - burst-error correction

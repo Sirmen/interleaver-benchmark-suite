@@ -17,7 +17,8 @@ the paper. It holds four things:
 The campaign data (the eight sweeps the paper reports) are archived
 separately on Zenodo, because they are too large for git:
 
-- code, this repository, archived release: https://doi.org/10.5281/zenodo.XXXXXXX
+- code, this repository, archived release v1.0.0: https://doi.org/10.5281/zenodo.23170143
+  (every version, always the latest: https://doi.org/10.5281/zenodo.23170142)
 - campaign data: https://doi.org/10.5281/zenodo.23136341
 
 ## Requirements
