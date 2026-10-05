@@ -1,0 +1,24 @@
+# MATLAB
+*.asv
+*.m~
+*.mex*
+slprj/
+# campaign output: archived on Zenodo, not in git
+data/results/
+results/
+figures/
+*.fig
+# large binaries
+*.mat
+!tables/*.mat
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# The divisor table is 235 MB: over GitHub's 100 MB per-file limit, and a Git LFS
+# pointer would be archived by Zenodo instead of the file itself. It ships with the
+# campaign data archive; setup_paths finds it wherever you put it.
+tables/factors.mat
+data/
+figures/

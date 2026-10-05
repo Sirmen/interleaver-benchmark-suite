@@ -1,0 +1,210 @@
+[
+ {
+  "N": 24,
+  "P0_rule": 7,
+  "P0_pub": 5,
+  "Smin_pub": 6,
+  "Smin_derived": 6,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 36,
+  "P0_rule": 7,
+  "P0_pub": 11,
+  "Smin_pub": 6,
+  "Smin_derived": 6,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 48,
+  "P0_rule": 11,
+  "P0_pub": 13,
+  "Smin_pub": 8,
+  "Smin_derived": 8,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 72,
+  "P0_rule": 11,
+  "P0_pub": 11,
+  "Smin_pub": 6,
+  "Smin_derived": 12,
+  "offsets": [
+   12,
+   0,
+   12
+  ],
+  "zero": false
+ },
+ {
+  "N": 96,
+  "P0_rule": 13,
+  "P0_pub": 7,
+  "Smin_pub": 6,
+  "Smin_derived": 12,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 120,
+  "P0_rule": 17,
+  "P0_pub": 13,
+  "Smin_pub": 12,
+  "Smin_derived": 12,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 144,
+  "P0_rule": 17,
+  "P0_pub": 17,
+  "Smin_pub": 16,
+  "Smin_derived": 16,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 180,
+  "P0_rule": 19,
+  "P0_pub": 11,
+  "Smin_pub": 12,
+  "Smin_derived": 18,
+  "offsets": [
+   18,
+   0,
+   18
+  ],
+  "zero": false
+ },
+ {
+  "N": 192,
+  "P0_rule": 19,
+  "P0_pub": 11,
+  "Smin_pub": 12,
+  "Smin_derived": 18,
+  "offsets": [
+   48,
+   96,
+   144
+  ],
+  "zero": false
+ },
+ {
+  "N": 216,
+  "P0_rule": 19,
+  "P0_pub": 13,
+  "Smin_pub": 14,
+  "Smin_derived": 18,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 240,
+  "P0_rule": 23,
+  "P0_pub": 13,
+  "Smin_pub": 10,
+  "Smin_derived": 20,
+  "offsets": [
+   20,
+   0,
+   20
+  ],
+  "zero": false
+ },
+ {
+  "N": 480,
+  "P0_rule": 31,
+  "P0_pub": 53,
+  "Smin_pub": 20,
+  "Smin_derived": 30,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 960,
+  "P0_rule": 43,
+  "P0_pub": 43,
+  "Smin_pub": 32,
+  "Smin_derived": 36,
+  "offsets": [
+   690,
+   832,
+   898
+  ],
+  "zero": false
+ },
+ {
+  "N": 1440,
+  "P0_rule": 53,
+  "P0_pub": 43,
+  "Smin_pub": 30,
+  "Smin_derived": 44,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 1920,
+  "P0_rule": 61,
+  "P0_pub": 31,
+  "Smin_pub": 38,
+  "Smin_derived": 60,
+  "offsets": [
+   0,
+   0,
+   0
+  ],
+  "zero": true
+ },
+ {
+  "N": 2400,
+  "P0_rule": 71,
+  "P0_pub": 53,
+  "Smin_pub": 42,
+  "Smin_derived": 58,
+  "offsets": [
+   668,
+   1336,
+   2008
+  ],
+  "zero": false
+ }
+]

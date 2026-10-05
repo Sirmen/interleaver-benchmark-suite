@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below and the archived release."
+title: "Interleaver Benchmark Suite: parameter provenance, metric taxonomy and validated metrics"
+authors:
+  - family-names: Sirmen
+    given-names: "R. Tanju"
+    affiliation: "Piri Reis University, Istanbul, Türkiye"
+    orcid: "https://orcid.org/0000-0001-5014-4780"
+version: "1.0.0"
+date-released: "2026-10-04"
+license: MIT
+repository-code: "https://github.com/USER/interleaver-benchmark-suite"   # TODO
+doi: "10.5281/zenodo.0000000"                                            # TODO: filled after the first release
+keywords:
+  - interleaving
+  - burst-error correction
+  - benchmarking
+  - reproducibility
+  - evaluation metrics
+preferred-citation:
+  type: article
+  title: "Code-Aware Interleaver Metrics on Burst-Error Channels: Reed–Solomon Benchmark Validation and Parameter Provenance"
+  authors:
+    - family-names: Sirmen
+      given-names: "R. Tanju"
+  year: 2026
+  journal: "arXiv"                                   # TODO: arXiv id, later the journal
+references:
+  - type: data
+    title: "Campaign data for the paper"
+    doi: "10.5281/zenodo.23136341"
+    authors:
+      - family-names: Sirmen
+        given-names: "R. Tanju"

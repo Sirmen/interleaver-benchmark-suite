@@ -1,0 +1,14 @@
+Fill these in on zenodo.org > New upload (dataset record)
+
+Upload type:        Dataset
+Title:              Campaign data for "Reproducibility in Interleaver Benchmarking: A Validated Evaluation Suite with Metric Taxonomy and Parameter Provenance"
+Creators:           Sirmen, R. Tanju (Piri Reis University) [ORCID]
+Description:        (paste the first two paragraphs of DATA_README.md)
+Version:            1.0.0
+License:            Creative Commons Attribution 4.0 International
+Keywords:           interleaving; burst-error correction; benchmarking; reproducibility; Monte Carlo
+Related identifiers:
+  - is supplement to  -> [arXiv DOI or URL of the paper]            (Publication / Preprint)
+  - is supplemented by / is referenced by -> 10.5281/zenodo.XXXXXXX (Software; the code record)
+Files:              KPItableDetailed_*.mat + .csv.gz, correlation_data_*.mat, config_*.mat, DATA_README.md
+Tip:                press "Reserve DOI" before publishing, so the DOI can go into the paper and the code first.
