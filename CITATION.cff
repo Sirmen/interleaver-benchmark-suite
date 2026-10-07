@@ -6,11 +6,11 @@ authors:
     given-names: "R. Tanju"
     affiliation: "Piri Reis University, Istanbul, Türkiye"
     orcid: "https://orcid.org/0000-0001-5014-4780"
-version: "1.0.0"
-date-released: "2026-10-05"
+version: "1.0.2"
+date-released: "2026-10-07"
 license: MIT
 repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
-doi: "10.5281/zenodo.23170143"           # v1.0.0; all versions: 10.5281/zenodo.23170142
+doi: "10.5281/zenodo.23170142"           # concept DOI; always resolves to the latest version
 keywords:
   - interleaving
   - burst-error correction
@@ -19,7 +19,7 @@ keywords:
   - evaluation metrics
 preferred-citation:
   type: article
-  title: "Code-Aware Interleaver Metrics on Burst-Error Channels: Reed–Solomon Benchmark Validation and Parameter Provenance"
+  title: "Code-Aware Interleaver Metrics for Burst-Error Channels: Predictive Validity and Parameter Provenance"
   authors:
     - family-names: Sirmen
       given-names: "R. Tanju"

@@ -1,7 +1,7 @@
 {
   "title": "Interleaver Benchmark Suite: parameter provenance, metric taxonomy and validated metrics (code)",
   "upload_type": "software",
-  "description": "MATLAB implementation of the interleaver evaluation suite of 'Code-Aware Interleaver Metrics on Burst-Error Channels: Reed–Solomon Benchmark Validation and Parameter Provenance': canonical interleaver implementations with declared parameter rules, the length-grid generator, precomputed permutation tables, the metric implementations, the simulation harness and the analysis scripts that regenerate every table and figure. The campaign data are archived separately (see related identifiers).",
+  "description": "MATLAB implementation of the interleaver evaluation suite of 'Code-Aware Interleaver Metrics for Burst-Error Channels: Predictive Validity and Parameter Provenance': canonical interleaver implementations with declared parameter rules, the length-grid generator, precomputed permutation tables, the metric implementations, the simulation harness and the analysis scripts that regenerate every table and figure. The campaign data are archived separately (see related identifiers).",
   "creators": [
     {"name": "Sirmen, R. Tanju", "affiliation": "Piri Reis University", "orcid": "0000-0001-5014-4780"}
   ],
