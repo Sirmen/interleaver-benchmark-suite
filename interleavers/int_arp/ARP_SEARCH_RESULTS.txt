@@ -1,0 +1,37 @@
+Derived-ARP search, exhaustive over the published constraint set, all
+seventeen block sizes of IEEE Std 802.16-2017 (cl. 8.4.9.2.3.2).
+
+Rule: C = 4 with C | N; P0 = coprime of N nearest sqrt(2N); P2 = 0 (mod 4);
+P1, P3 even with P1 = P3 (mod 4); offsets maximise Berrou's Smin.
+
+    N     P0   derived Smin   optimising (P1,P2,P3)   zero?   published Smin
+   24      7          6        (0, 0, 0)               yes          6   equal
+   36      7          6        (0, 0, 0)               yes          6   equal
+   48     11          8        (0, 0, 0)               yes          8   equal
+   72     11         12        (12, 0, 12)              no          6   higher
+   96     13         12        (0, 0, 0)               yes          6   higher
+  108     13         12        (0, 0, 0)               yes          6   higher
+  120     17         12        (0, 0, 0)               yes         12   equal
+  144     17         16        (0, 0, 0)               yes         16   equal
+  180     19         18        (18, 0, 18)              no         12   higher
+  192     19         18        (48, 96, 144)            no         12   higher
+  216     19         18        (0, 0, 0)               yes         14   higher
+  240     23         20        (20, 0, 20)              no         10   higher
+  480     31         30        (0, 0, 0)               yes         20   higher
+  960     43         36        (18, 148, 46)            no         32   higher
+ 1440     53         44        (0, 0, 0)               yes         30   higher
+ 1920     61         60        (0, 0, 0)               yes         38   higher
+ 2400     71         60        (210, 600, 250)          no         42   higher
+
+Totals over seventeen lengths:
+  optimising offsets (0,0,0)          11
+  derived Smin higher than published  12
+  equal                                5
+  lower                                0
+
+Published rows: all seventeen are bijections, all have gcd(P0,N) = 1, and all
+satisfy P2 = 0 (mod 4), P1 and P3 even, P1 = P3 (mod 4). Five are degenerate
+(N = 36, 48, 120, 180, 216).
+
+Reproduced three ways: MATLAB (verify_arp_table, N <= 240), Python, and C
+(arp_derived_search.c, all seventeen; N = 2400 takes about 90 s).

@@ -49,16 +49,17 @@ function [vectorInterleaved, permutation, info, erM] = ...
 % Deriving the offsets from the only channel-relevant criterion available here
 % - spread - was tried and rejected on evidence. Using Berrou's own stride
 % rule (P0 nearest coprime to sqrt(2N)) and his own S_min criterion over the
-% published constraint set, the optimum offsets came out (0,0,0) at TEN of the
-% sixteen tabulated lengths. At (0,0,0) every effective offset vanishes and
-% the map collapses to i = (P0*j + 1) mod N - a plain relative-prime
+% published constraint set, the optimum offsets came out (0,0,0) at ELEVEN of
+% the seventeen tabulated lengths. At (0,0,0) every effective offset vanishes
+% and the map collapses to i = (P0*j + 1) mod N - a plain relative-prime
 % interleaver, i.e. a twin of interleaver_goldenRP with a different stride.
 %
 % And the derived S_min was NEVER LOWER than the published one - strictly
-% higher at 11 of 16 lengths, equal at the other 5:
+% higher at 12 of 17 lengths, equal at the other 5:
 %       N = 1920 : derived 60 vs published 38
 %       N = 1440 : derived 44 vs published 30
 %       N =  240 : derived 20 vs published 10
+%       N =  108 : derived 12 vs published  6
 % If the standard's parameters were chosen to maximise spread, a bounded
 % search under that same criterion could not beat them at two thirds of the
 % lengths. They were not. They were chosen for turbo distance.
@@ -66,7 +67,7 @@ function [vectorInterleaved, permutation, info, erM] = ...
 % So a "derived ARP" would not be an ARP. It would be a second copy of a
 % method already in the benchmark, wearing a standard's name.
 %
-% A related fact worth reporting: FIVE of the sixteen published rows are
+% A related fact worth reporting: FIVE of the seventeen published rows are
 % themselves degenerate. At N = 36, 48, 120, 180 and 216 the tabulated values
 % give N/2 + P1 = 0, P2 = 0, N/2 + P3 = 0 (mod N), so the standardised
 % interleaver at those lengths IS the plain relative-prime map. Two of them,
@@ -95,7 +96,8 @@ function [vectorInterleaved, permutation, info, erM] = ...
 %   info.reference          citation string for the provenance table
 %   info.Smin               minimum spatial distance achieved
 %
-% R.T. Sirmen harness, canonicalised 2026-08
+% R.T. Sirmen harness, canonicalised 2026-08; table verified against
+% IEEE Std 802.16-2017 and N = 108 added, 2026-10-07
 
 erM = ""; vectorInterleaved = []; permutation = []; info = struct();
 try
@@ -128,8 +130,9 @@ try
    if isempty(P0)
       erM = sprintf(['interleaver_arp: no published parameters for N = %d. ' ...
                      'ARP is evaluated only at standardised lengths ' ...
-                     '(24 36 48 72 96 120 144 180 192 216 240 480 960 1440 ' ...
-                     '1920 2400); see the header for why nothing is derived.'], N);
+                     '(24 36 48 72 96 108 120 144 180 192 216 240 480 960 ' ...
+                     '1440 1920 2400); see the header for why nothing is ' ...
+                     'derived.'], N);
       return;
    end
 
@@ -185,32 +188,37 @@ function [P0, P1, P2, P3, src, ref] = local_published(N)
 %
 % Columns: N (couples), P0, P1, P2, P3.
 %
-% >>> SOURCE WARNING - RESOLVE BEFORE SUBMISSION <<<
-% These rows were NOT read from the published IEEE standard, which could not
-% be obtained. They are the agreed values of three independent sources that
-% match on every overlapping row:
+% SOURCE OF RECORD: IEEE Std 802.16-2017, clause 8.4.9.2.3.2. Every row below
+% was read from the standard itself (verified 2026-10-07). The standard splits
+% the parameters over two tables and neither alone is complete:
 %
-%   * IEEE 802.16 WG maintenance contribution C80216maint-05_014r1, Table 327
-%     (an official WG document, but a contribution, not standard text)
-%   * US patent US20110113307A1 (Samsung), Table 1, presented as "the
-%     conventional IEEE 802.16e system"
-%   * ATSC A/323:2024 Dedicated Return Channel - a published standard that
-%     normatively re-specifies the same CTC
+%   * Table 8-328, CTC channel coding per modulation, covers
+%     N = 24, 36, 48, 72, 96, 108, 120, 144, 180, 192, 216, 240
+%   * Table 8-329, the same when supporting IR HARQ, covers
+%     N = 24, 48, 72, 96, 144, 192, 240, 480, 960, 1440, 1920, 2400
 %
-% All sixteen rows were verified numerically: each produces a genuine
+% Seventeen distinct N in the union; N = 240 is in both and the two agree.
+% N = 36, 108, 120, 180 and 216 exist ONLY in Table 8-328, which is why a
+% copy taken from the HARQ table alone is missing them.
+%
+% All seventeen rows were verified numerically: each produces a genuine
 % bijection under local_map, each has gcd(P0,N) = 1, and each satisfies
 % P2 = 0 (mod 4), P1 and P3 even, P1 = P3 (mod 4).
 %
-% VERIFY AGAINST IEEE Std 802.16 CLAUSE 8.4.9.2.3.2 BEFORE PUBLISHING.
-%
-% SECOND TRAP: the 2004 TGd proposal C80216d-04_23 lists DIFFERENT values for
-% N >= 480. Those were replaced during 2005 maintenance and are obsolete. The
-% values below are the post-maintenance set.
+% TWO SECONDARY SOURCES DISAGREE WITH THE STANDARD, both at values this file
+% does not use:
+%   * maintenance contribution C80216maint-05_014r1, Table 327, gives
+%     P2 = 160 at N = 240 where the standard gives 60. The standard wins.
+%   * the 2004 TGd proposal C80216d-04_23 lists different values for N >= 480.
+%     Those were replaced during 2005 maintenance and are obsolete.
+% US patent US20110113307A1 (Samsung), Table 1, and ATSC A/323:2024 both agree
+% with the standard on every row they share with it.
    T = [  24    5    0    0    0
           36   11   18    0   18
           48   13   24    0   24
           72   11    6    0    6
-          96    7   48   24   72
+           96    7   48   24   72
+         108   11   54   56    2
          120   13   60    0   60
          144   17   74   72    2
          180   11   90    0   90
