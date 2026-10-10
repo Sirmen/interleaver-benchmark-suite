@@ -121,7 +121,7 @@ text with it, and the point sizes stop meaning anything.
 ## Running them
 
 ```matlab
-dataDir = 'C:\TS_data\S-Int\results';
+dataDir = 'path/to/campaign/results';   % the folder holding KPItableDetailed_*.mat
 
 % Figures 1 and 6 — both come out of one screen, so run it once each.
 R1 = fig1_screen(dataDir);

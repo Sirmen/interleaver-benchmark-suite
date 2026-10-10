@@ -66,7 +66,7 @@ function fig2_taxonomy(opts)
    if ~isfield(opts, 'outDir'), opts.outDir = ''; end
 
    S = fig_style('sizes'); C = fig_style('colors');
-   y0Crop = 22;   % nothing below this is drawn; the asterisk key sits at 22.5
+   y0Crop = 31;   % nothing below this is drawn; the asterisk key is in the caption
 
    % Cell contents, held here as data rather than buried in the drawing
    % code, so the membership can be read and checked in one place. The
@@ -76,9 +76,16 @@ function fig2_taxonomy(opts)
    % The comma before each line break is deliberate: a wrapped list keeps its
    % separator, and the counts below split on commas, so a missing one is both
    % a typographic and an arithmetic error.
-   % A superscript asterisk marks a metric introduced in this paper. All five
-   % of Section VI-G carry one: overT in the tinted cell, the other four in
-   % the a priori n-aware cell beside it. The key is drawn under the grid.
+   % A superscript asterisk marks a metric introduced in this paper. Seven
+   % carry one: the five of Section VI-G, with overT in the tinted cell and
+   % the other four in the a priori n-aware cell beside it, and sep_{min} and
+   % adj_{CV} in the a priori code-agnostic cell, the worst-case and dispersion
+   % counterparts of eta_{sep} and adj_{min}. The marker is defined in the
+   % manuscript caption and no longer keyed inside the drawing: the key cost a
+   % line of height and said what the caption already says.
+   % The Section VIII verdict is deliberately NOT drawn. Provenance and outcome
+   % are orthogonal, the figure argues the taxonomy, and the verdict has three
+   % objects of its own (Tables X and XI, Fig. 5). Do not add a second mark.
    % The marker is '*' and not '\dagger' on purpose: the dagger is not in the
    % TeX subset MATLAB's text interpreter accepts, and an unsupported command
    % is printed verbatim rather than raising an error.
@@ -91,7 +98,7 @@ function fig2_taxonomy(opts)
    % dimensions not consistent' at run time. The block-balance checker cannot
    % see this, so the rule is written here where the next edit will meet it.
    cell_txt = { ...
-      sprintf('\\eta_{sep}, sep_{min},\nadj_{min}, CV_{adj},\nPSR, S_{factor}, LE'), ...
+      sprintf('\\eta_{sep}, sep_{min}^{*},\nadj_{min}, adj_{CV}^{*},\nPSR, S_{factor}, LE'), ...
       sprintf('S_{sf}, giniLoad^{*},\nmeanMaxCW^{*},\nmaxErrCW^{*},\ncvLoad^{*}'), ...
       'overT^{*}'; ...
       '(none)', ...
@@ -104,7 +111,7 @@ function fig2_taxonomy(opts)
    rowLab = {{'\bf a priori', '\rm (no realization)'}, ...
              {'\bf a posteriori', '\rm (realization)'}};
 
-   f = fig_style('new', 'single', 2.30);
+   f = fig_style('new', 'single', 2.15);
    ax = axes('Parent', f, 'Position', [0.005 0.005 0.99 0.99]);
    hold(ax, 'on'); axis(ax, 'off');
    xlim(ax, [0 100]); ylim(ax, [y0Crop 100]);
@@ -112,9 +119,14 @@ function fig2_taxonomy(opts)
    % x0: room for the vertical row labels, kept as narrow as those labels
    % allow, because every unit taken here comes out of the cells.
    x0 = 9; w = (100 - x0 - 1) / 3;
-   % Rows sized to their content: four lines in the widest upper cell, three
-   % in the widest lower one. The strip between y0Crop and y0 carries the key.
-   yTop = 86; hU = 30; hL = 28; y0 = yTop - hU - hL;     % y0 = 28
+   % Rows sized to their content, and the LOWER ROW IS BOUND BY ITS LABEL,
+   % not by its cells. Both lower cells hold two lines (0.40 in of type), but
+   % the rotated label 'a posteriori / (realization)' is 0.70 in long, and a
+   % rotated label cannot be shorter than its longest line. Measured on the
+   % v76 export: hL = 24 leaves about 0.05 in of slack; hL = 22 clips. Dropping
+   % the parenthetical buys 0.06 in and costs the distinction the caption
+   % leans on, so the label stays and hL stops at 24.
+   yTop = 86; hU = 30; hL = 24; y0 = yTop - hU - hL;     % y0 = 32
    rowY = [yTop - hU, y0]; rowH = [hU, hL];
 
    for r = 1:2
@@ -148,14 +160,6 @@ function fig2_taxonomy(opts)
            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
    end
 
-   % Key for the asterisk, under the grid and left-aligned with it, so the
-   % figure states which metrics are new without relying on the caption.
-   % Set from the bottom of the axes so it cannot ride up into the grid line.
-   text(ax, x0, y0Crop + 0.5, '^{*} introduced here', 'FontName', S.font, ...
-        'FontSize', S.note, 'FontAngle', 'italic', 'Color', [0.35 0.35 0.35], ...
-        'Interpreter', 'tex', 'HorizontalAlignment', 'left', ...
-        'VerticalAlignment', 'bottom');
-
    % The axes are ordered, and the order is the claim: knowing more about the
    % code cannot reduce what a metric can discriminate. The arrow is an
    % annotation, so its endpoints are figure units; both are computed from the
@@ -169,7 +173,15 @@ function fig2_taxonomy(opts)
         'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
         'BackgroundColor', 'w', 'Margin', 0.5);
 
-   if opts.save, fig_style('save', f, 'fig2_taxonomy', opts.outDir); end
+   % Say where the files went. fig_style returns the paths it wrote and this
+   % script used to drop them, which left the caller guessing between
+   % <pwd>/figures, PAPER_FIG_DIR and whatever outDir was passed.
+   if opts.save
+      files = fig_style('save', f, 'fig2_taxonomy', opts.outDir);
+      if ~isempty(files)
+         fprintf('\n  written to %s\n', fileparts(files{1}));
+      end
+   end
 
    % The figure names every metric in the study, so the counts are checks the
    % script can run rather than things to eyeball. The study scores nineteen
@@ -177,7 +189,7 @@ function fig2_taxonomy(opts)
    % eighteen has lost one silently, which is the failure mode a picture is
    % worst at revealing - and there is no longer a table to catch it. The
    % second and third checks are the ones the v40 correction added: exactly
-   % one metric may sit in the a priori, (n,t)-aware cell, and exactly five
+   % one metric may sit in the a priori, (n,t)-aware cell, and exactly seven
    % metrics in the whole figure may carry the marker.
    total = 0;
    for r = 1:2
@@ -203,12 +215,13 @@ function fig2_taxonomy(opts)
       fprintf(2, ['\n  THE A PRIORI (n,t)-AWARE CELL HOLDS %d METRICS; ONLY overT USES t.\n' ...
                   '  See the argument sets in the header of this file.\n'], nHi);
    end
-   if nNew ~= 5
+   if nNew ~= 7
       ok = false;
-      fprintf(2, '\n  %d METRICS CARRY THE NEW-METRIC MARKER; SECTION VI-G DEFINES 5.\n', nNew);
+      fprintf(2, ['\n  %d METRICS CARRY THE NEW-METRIC MARKER; THIS PAPER STATES 7\n' ...
+                  '  FIRST: the 5 of Section VI-G plus sep_min and adj_CV.\n'], nNew);
    end
    if ok
-      fprintf(['\n  19 metrics across the six cells, 5 marked as new, overT alone\n' ...
+      fprintf(['\n  19 metrics across the six cells, 7 marked as new, overT alone\n' ...
                '  in the a priori (n,t)-aware cell.\n\n']);
    else
       fprintf('\n');

@@ -6,20 +6,24 @@ authors:
     given-names: "R. Tanju"
     affiliation: "Piri Reis University, Istanbul, Türkiye"
     orcid: "https://orcid.org/0000-0001-5014-4780"
-version: "1.0.2"
-date-released: "2026-10-07"
+version: "1.0.3"
+date-released: "2026-10-10"
 license: MIT
 repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
 doi: "10.5281/zenodo.23170142"           # concept DOI; always resolves to the latest version
 keywords:
-  - interleaving
-  - burst-error correction
+  - interleaver design
+  - burst-error mitigation
+  - forward error correction
+  - Reed-Solomon codes
+  - Gilbert-Elliott channel
+  - design-time evaluation metrics
+  - reproducible research
   - benchmarking
-  - reproducibility
-  - evaluation metrics
+  - MATLAB
 preferred-citation:
   type: article
-  title: "Code-Aware Interleaver Metrics for Burst-Error Channels: Predictive Validity and Parameter Provenance"
+  title: "Code-Aware Interleaver Metrics for Burst-Error Channels: Taxonomy and Validation on a Provenance-Governed Benchmark"
   authors:
     - family-names: Sirmen
       given-names: "R. Tanju"

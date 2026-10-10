@@ -50,6 +50,8 @@ function [burstMask, geInfo, erM] = genGilbertElliottMask(lenEncoded, burstConfi
 %   burstCount, burstSizes, burstStarts, burstEnds
 %   totalErrors, realisedRate, meanBurstLen_realised, maxBurstLen
 %   draws, forced
+%   nudge, nudgeRuns                what the repair moved, both 0 when forced is false
+%   burstSizesPre                   run lengths before the repair, [] when forced is false
 %
 % R.T. Sirmen harness integration, 2026
 
@@ -121,8 +123,20 @@ try
    end
 
    burstMask = best;
+   nudge = 0; nudgeRuns = 0; sizesPre = [];
    if bestGap > 0
+      % Record what the repair actually moved, so the manuscript can report it
+      % instead of asserting that the structure survives. nudge is the signed
+      % number of symbols added (+) or removed (-); nudgeRuns is the change in
+      % the number of runs, which is zero unless an addition closed a one-symbol
+      % gap and merged two runs.
+      cPre = sum(burstMask);
+      [sPre, ePre] = local_runs(burstMask);
+      sizesPre = ePre - sPre + 1;
       [burstMask, forced] = local_nudge(burstMask, loCount, hiCount, target);
+      sPost = local_runs(burstMask);
+      nudge     = sum(burstMask) - cPre;
+      nudgeRuns = numel(sPost) - numel(sPre);
    end
 
    % ---- descriptive statistics of what the chain actually produced ----
@@ -146,8 +160,16 @@ try
       geInfo.meanBurstLen_realised = mean(sizes);
       geInfo.maxBurstLen           = max(sizes);
    end
-   geInfo.draws  = draws;
-   geInfo.forced = forced;
+   geInfo.draws     = draws;
+   geInfo.forced    = forced;
+   geInfo.nudge     = nudge;        % signed symbols moved by the repair, 0 if none
+   geInfo.nudgeRuns = nudgeRuns;    % change in the number of runs, 0 if none
+   % Run lengths of this same mask BEFORE the repair, empty when none was made.
+   % Comparing burstSizesPre with burstSizes isolates what the repair did, which
+   % comparing forced masks against unforced ones cannot: a forced mask is also a
+   % mask that missed the band fifty times, so that comparison carries the
+   % selection as well as the repair.
+   geInfo.burstSizesPre = sizesPre;
 
 catch ME
    erM = sprintf('%s: Error line %d: %s', ME.stack(1).name, ME.stack(1).line, ME.message);
