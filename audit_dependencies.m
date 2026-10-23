@@ -56,6 +56,18 @@ function audit_dependencies(releaseRoot, outFile)
       'DiagnosePrecomputedTable', 'test_all_interleavers_precomputed', ...
       'diagnose_snake', 'verify_arp_table', 'sintperm_ref', 'test_swapRows'};
 
+   % The per-family unit tests are entry points too, and their dependencies
+   % must be TRACED, not waved through. Marking a file as reached without
+   % following what it calls is how 24 shipped tests came to depend on a
+   % testInterleaver.m that was never copied into the release: the audit
+   % reported nothing missing because it never looked at them. Anything the
+   % report excuses, the closure must first have walked.
+   td = dir(fullfile(releaseRoot, 'interleavers', '**', 'test_*.m'));
+   for i = 1:numel(td)
+      [~, nm] = fileparts(td(i).name);
+      if ~any(strcmpi(nm, ENTRIES)), ENTRIES{end+1} = nm; end %#ok<AGROW>
+   end
+
    have = {}; miss = {};
    for i = 1:numel(ENTRIES)
       if isempty(which(ENTRIES{i})), miss{end+1} = ENTRIES{i}; %#ok<AGROW>
@@ -157,18 +169,9 @@ function audit_dependencies(releaseRoot, outFile)
       [~, nm] = fileparts(relFiles(i).name);
       ok = any(strcmpi(nm, ENTRIES)) || strcmpi(nm, 'audit_dependencies') || ...
            strcmpi(nm, 'setup_paths');
-      % The one prefix rule that is kept, and the reason it is safe: it is
-      % SCOPED BY DIRECTORY. A test_* file under interleavers/ is the unit
-      % test of the family in that folder - there are two dozen of them and
-      % naming each buys nothing. The rule that was removed applied a prefix
-      % across the whole tree, where check_ means an entry point in the root
-      % and a step of a retired protocol under health/. The folder supplies
-      % the meaning the prefix on its own does not carry.
-      if ~ok
-         rel = erase(fullfile(relFiles(i).folder, relFiles(i).name), [releaseRoot filesep]);
-         ok = strncmpi(nm, 'test_', 5) && ...
-              strncmpi(rel, ['interleavers' filesep], numel('interleavers') + 1);
-      end
+      % No prefix rule survives here. The unit tests under interleavers/ were
+      % added to ENTRIES above, so they are reached by the closure like any
+      % other entry point and their own dependencies are checked with them.
       if ok, needed(i) = true; end
    end
    unreached = relFiles(~needed);
@@ -219,6 +222,11 @@ function audit_dependencies(releaseRoot, outFile)
       ghost   = ghost(endsWith(ghost, '.m'));   % only code is our business here
       say('\n=== HERE BUT NOT IN GIT: %d ===\n', numel(untrack));
       say('  (would NOT ship; git add them or accept their absence)\n');
+      % Printed so that the list can be judged against its own input. When
+      % git reports a handful of paths and this list runs to hundreds, the
+      % fault is in reading git, not in the release.
+      say('  git ls-files reported %d paths; %d .m files are here\n', ...
+          numel(git), numel(relFiles));
       for i = 1:numel(untrack), say('  %s\n', untrack(i)); end
       say('\n=== IN GIT BUT NOT HERE: %d ===\n', numel(ghost));
       say('  (WOULD ship unless the deletion is committed)\n');
@@ -233,13 +241,24 @@ end
 
 function files = local_git(root)
 %LOCAL_GIT  Tracked paths, '/'-separated, or empty when git cannot answer.
+%
+% -z would be the safe separator and was the first choice. MATLAB's system()
+% TRUNCATES the captured output at the first NUL, so the list came back with
+% one entry and every released file looked untracked: a 212-line false alarm
+% that pointed at the release instead of at this function. Newline it is,
+% with quotepath off so that a non-ASCII path is emitted raw rather than
+% C-escaped. A quoted path would still be mangled, so say so if one appears.
    files = strings(0, 1);
    if ~isfolder(fullfile(root, '.git')), return; end
    old = pwd; c = onCleanup(@() cd(old));
    cd(root);
-   [st, out] = system('git ls-files -z');
-   if st ~= 0, files = strings(0, 1); return; end
-   parts = split(string(out), char(0));
+   [st, out] = system('git -c core.quotepath=false ls-files');
+   if st ~= 0, return; end
+   parts = strtrim(split(string(out), newline));
    parts = parts(strlength(parts) > 0);
+   if any(startsWith(parts, '"'))
+      fprintf(2, ['audit_dependencies: git C-quoted at least one path; the ' ...
+                  'comparison below is unreliable for those\n']);
+   end
    files = replace(parts, '\', '/');
 end

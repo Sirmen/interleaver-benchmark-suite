@@ -34,18 +34,26 @@ function [vectorInterleaved, permutation, M, D, erM] = ...
 % Forney guarantee, now actually delivered inside a finite frame.
 %
 % PARAMETER SELECTION
-% D is no longer fixed at 2. calc_optimal_M_D_convolutional always returned
-% D = 2 because it took the first d >= 2 coprime to a prime M, which is
-% d = 2 by construction - so the "maximise M*D" claim in its header was the
-% opposite of what it computed. Here D is chosen by direct search over
-% 1..R-1 to maximise the realised worst-case separation, which is what the
-% Ramsey/Forney design criterion actually asks for.
+% D = 1, the published rule. Both earlier answers are kept here because each
+% was wrong in a way worth recording. calc_optimal_M_D_convolutional always
+% returned D = 2: it took the first d >= 2 coprime to a prime M, which is
+% d = 2 by construction, so the "maximise M*D" claim in its header was the
+% opposite of what it computed. That helper was then replaced by a direct
+% search over d = 1..R-1 for the largest realised worst-case separation, and
+% THAT is a tuned interleaver rather than the convolutional interleaver of
+% the literature. Forney's structure delays branch b by b*M symbols: the
+% delay increment is one unit of M and there is no free parameter to search
+% over, so searching it gave this baseline an advantage the published method
+% does not have. local_forneyD returns 1, and the helper is gone from the
+% suite. This paragraph described the search until 2026-10-23, while the
+% code had returned 1 since August - the one direction in which a stale
+% header does real damage, since it claims a tuning that was removed.
 %
 % CONVENTION: vectorInterleaved = vectorIn(permutation)  (gather index).
 %
 % INPUTS
 %   bufferRows   M, number of branches. [] -> nearest divisor of N to sqrt(N)
-%   bufferSlope  D, delay increment.    [] -> searched for maximum separation
+%   bufferSlope  D, delay increment.    [] -> 1, the published Forney rule
 %
 % OUTPUTS
 %   M, D   the branch count and delay increment actually used
