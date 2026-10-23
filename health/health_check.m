@@ -313,13 +313,43 @@ function H = local_B4(H, C, tag)
 end
 
 function H = local_B5(H, C, tag, cfg)
-% KPI RECONSTRUCTION. Recompute CR and RES from the stored inputs under the
-% documented definition and compare against the stored values. This is the
-% one check that tests whether the numbers in the file are the numbers the
-% paper's equations describe. It is also the check that catches a file
-% rebuilt with a different method field or different weights, because RES is
-% standardized over whatever field was present when it was written.
-   need = {'decodeErrRate','decErrRate_woInt','noiseActual','encodedLen','interleavedLen','noiseBin','CR','RES'};
+% KPI RECONSTRUCTION. Recompute CR from the stored inputs under the documented
+% definition, and establish that the stored RES is the documented combination
+% of CR and BE. This is the one check that tests whether the numbers in the
+% file are the numbers the paper's equations describe.
+%
+% WHY THIS IS NOT A PLAIN RECOMPUTATION.
+% RES is w1*CR_z + w2*BE_z, and a z-score needs a standardization set.
+% calcKPIs_engine writes it over every row of a sweep; restandardize_scope
+% then rewrites these files on the in-scope methods the manuscript declares,
+% and scores the out-of-scope ones against that scale. A check that assumes
+% one of the two conventions reports a definition failure for what is a scope
+% difference - which is what this check did until 2026-10-23, silently, from
+% the day the restandardization was applied.
+%
+% The convention is therefore read off the data instead of assumed:
+%
+%   1. A z-score is affine in its argument, so for ANY standardization set
+%
+%         RES = (w1/sCR)*CR + (w2/sBE)*BE - (w1*mCR/sCR + w2*mBE/sBE)
+%
+%      with the same three coefficients in every row. Fitting them and
+%      requiring the fit to be exact tests the CR and BE definitions without
+%      knowing the set.
+%   2. That fit alone would absorb a changed weight pair into the
+%      coefficients, so the scale is recovered from it under the documented
+%      weights and matched against the standardization set of a real subset
+%      of the methods. A wrong weight pair does not land on the moments of an
+%      actual subset, so finding one confirms the weights and the scope
+%      together.
+%   3. The winning subset is then used to rebuild RES outright and compared
+%      to the stored values. Nothing is fitted in the verdict.
+%
+% Not identifying a subset is a failure: it means the weights, the definition
+% or the standardization set is not the documented one. The recovered scales
+% are printed so that the reader can see which set would have been needed.
+   need = {'decodeErrRate','decErrRate_woInt','noiseActual','encodedLen', ...
+           'interleavedLen','noiseBin','CR','RES'};
    if ~all(isfield(C, need))
       H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf('%s: inputs absent, reconstruction skipped', tag));
       return;
@@ -328,33 +358,122 @@ function H = local_B5(H, C, tag, cfg)
       H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf('%s: no config.noiseLevels, reconstruction skipped', tag));
       return;
    end
+
+   W = [0.5 0.5];        % the documented weights; step 2 above tests them
+   TOLC = 1e-8;          % relative, on the recovered coefficients
+   TOLR = 1e-9;          % absolute, on the rebuilt RES
+
    nb = C.noiseBin; tgt = nan(size(nb));
    ok = nb >= 1 & nb <= numel(cfg.noiseLevels);
    tgt(ok) = cfg.noiseLevels(nb(ok));
    BE = C.encodedLen ./ C.interleavedLen;
    CRraw = max(0, 1 - (C.decodeErrRate ./ (C.decErrRate_woInt + eps)));
    CR = CRraw .* (C.noiseActual ./ (tgt + eps));
-   CRz = (CR - mean(CR)) / (std(CR) + eps);
-   BEz = (BE - mean(BE)) / (std(BE) + eps);
-   RES = 0.5*CRz + 0.5*BEz;
-   eCR = max(abs(CR - C.CR)); eRES = max(abs(RES - C.RES));
-   if max(eCR, eRES) < 1e-9
-      H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf('%s: CR and RES reproduce to %.1e', tag, max(eCR,eRES)));
-   else
+   eCR = max(abs(CR - C.CR));
+
+   CR = double(CR(:)); BE = double(BE(:)); RS = double(C.RES(:));
+
+   % ---- 1. the definition, free of any standardization set ----------------
+   A  = [CR, BE, ones(numel(CR), 1)];
+   ab = A \ RS;
+   eFit = max(abs(A*ab - RS));
+   if ~(eCR < TOLR && eFit < TOLR)
       H.blocking.B5_kpi.pass = false;
       H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf(...
-         ['%s: stored CR/RES do NOT reproduce (CR %.3g, RES %.3g). Either the ' ...
-          'definition changed, the weights differ, or the file was standardized ' ...
-          'over a different method field.'], tag, eCR, eRES));
+         ['%s: stored CR/RES do NOT reproduce (CR %.3g, RES-as-affine-in-CR-and-BE ' ...
+          '%.3g). RES is not any standardization of the documented CR and BE, so ' ...
+          'the definition itself differs.'], tag, eCR, eFit));
+      return;
    end
+
+   % ---- 2. recover the scale and find the subset it belongs to ------------
+   % Per-method sums, so that any subset's mean and std come from scalars and
+   % the candidate search costs nothing.
+   if ~isfield(C, 'method')
+      H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf(...
+         ['%s: CR and RES reproduce to %.1e, but with no method field the ' ...
+          'standardization set cannot be named'], tag, max(eCR, eFit)));
+      return;
+   end
+   mth = C.method;
+   if ~iscell(mth), mth = cellstr(mth); end
+   [uM, ~, gm] = unique(mth(:));
+   nM = numel(uM);
+   n  = accumarray(gm, 1);
+   s1 = accumarray(gm, CR);  q1 = accumarray(gm, CR.^2);
+   s2 = accumarray(gm, BE);  q2 = accumarray(gm, BE.^2);
+
+   % candidate standardization sets: every method, then all but one, then all
+   % but two. The declared out-of-scope set has two members; a wider search
+   % would start fitting the scope to the data.
+   cand = {true(nM, 1)};
+   for i = 1:nM
+      m = true(nM, 1); m(i) = false; cand{end+1} = m;                      %#ok<AGROW>
+   end
+   for i = 1:nM-1
+      for j = i+1:nM
+         m = true(nM, 1); m([i j]) = false; cand{end+1} = m;               %#ok<AGROW>
+      end
+   end
+
+   hit = 0;
+   for k = 1:numel(cand)
+      m = cand{k};
+      N = sum(n(m));
+      if N < 2, continue; end
+      mu1 = sum(s1(m)) / N;  v1 = (sum(q1(m)) - N*mu1^2) / (N - 1);
+      mu2 = sum(s2(m)) / N;  v2 = (sum(q2(m)) - N*mu2^2) / (N - 1);
+      if ~(v1 > 0 && v2 > 0), continue; end
+      sd1 = sqrt(v1); sd2 = sqrt(v2);
+      p = [W(1)/sd1, W(2)/sd2, -(W(1)*mu1/sd1 + W(2)*mu2/sd2)];
+      if max(abs(p(:) - ab(:)) ./ (abs(ab(:)) + eps)) < TOLC
+         hit = k; break;
+      end
+   end
+
+   if hit == 0
+      H.blocking.B5_kpi.pass = false;
+      H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf(...
+         ['%s: RES is an exact standardization of CR and BE, but on no subset of ' ...
+          'the methods. Under weights [%g %g] it implies sCR = %.6g and ' ...
+          'sBE = %.6g; the full field gives %.6g and %.6g. The weights or the ' ...
+          'standardization set are not the documented ones.'], ...
+         tag, W(1), W(2), W(1)/ab(1), W(2)/ab(2), std(CR), std(BE)));
+      return;
+   end
+
+   % ---- 3. rebuild RES on that set and compare, nothing fitted ------------
+   m  = cand{hit};
+   at = m(gm);
+   z1 = (CR - mean(CR(at))) / (std(CR(at)) + eps);
+   z2 = (BE - mean(BE(at))) / (std(BE(at)) + eps);
+   eRES = max(abs(W(1)*z1 + W(2)*z2 - RS));
+   if ~(eRES < TOLR)
+      H.blocking.B5_kpi.pass = false;
+      H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf(...
+         ['%s: the standardization set was identified but rebuilding RES on it ' ...
+          'leaves %.3g; the coefficients agree and the values do not.'], tag, eRES));
+      return;
+   end
+
+   out = uM(~m);
+   if isempty(out)
+      how = 'all-rows standardization';
+   else
+      how = sprintf('in-scope standardization; %d of %d methods scored, not standardized on: %s', ...
+                    numel(out), nM, strjoin(out(:).', ', '));
+   end
+   H.blocking.B5_kpi.detail{end+1} = local_mark2(true, sprintf(...
+      '%s: CR and RES reproduce to %.1e  (%s)', tag, max([eCR eRES]), how));
 end
 
 function H = local_B6(H, C, tag)
-% METHOD FIELD. RES is standardized over every row of the file, so a z-score
-% is relative to the methods evaluated together. Two files with different
-% method sets carry RES values that are not on the same scale and must not be
-% pooled or compared. The field is recorded here so that a later reader can
-% see what was standardized with what.
+% METHOD FIELD. A z-score is relative to the methods standardized together,
+% so two files with different method sets carry RES values that are not on
+% the same scale and must not be pooled or compared. B5 reports WHICH set
+% each file was standardized on; this check records the full field present,
+% so that a later reader can see what was scored alongside what. The two
+% together, not either alone, say what a RES value means.
    uM = sort(unique(C.method));
    H.blocking.B6_field.detail{end+1} = local_mark2(true, sprintf('%s: %d methods [%s]', ...
       tag, numel(uM), strjoin(uM(:).', ', ')));

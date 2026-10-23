@@ -60,7 +60,14 @@ function out = fig7_bracket(opts)
    if ~isfield(opts, 'save'),       opts.save = true;    end
    if ~isfield(opts, 'outDir'),     opts.outDir = '';    end
 
-   STATS = {'overT', 'maxErrCW', 'meanMaxCW', 'cvLoad', 'giniLoad'};
+   % esLoad is admitted here and in local_pick together: STATS is the
+   % whitelist for opts.metric, so listing a metric local_pick cannot return
+   % would accept the request and then index past the end of its array.
+   % B_guar is NOT admitted: it returns a burst length in symbols rather than
+   % a bounded score, so the reference brackets this figure draws - the
+   % identity permutation's value, the random ensemble band - have no common
+   % scale with it.
+   STATS = {'overT', 'maxErrCW', 'meanMaxCW', 'cvLoad', 'giniLoad', 'esLoad'};
    mi = find(strcmp(STATS, opts.metric), 1);
    if isempty(mi)
       error('fig7_bracket:metric', 'metric must be one of: %s', strjoin(STATS, ', '));
@@ -126,9 +133,14 @@ function out = fig7_bracket(opts)
    % vertical offset below tightened to what 8 pt text needs at this scale
    % (about 0.19 y-units per line). The earlier 2.05 in carried air above
    % the arrow and between the label rows.
-   f = fig_style('new', 'single', 1.65);
+   f = fig_style('new', 'wide', 1.65);
+   % Width comes from the figure, not from a literal repeated here: the two
+   % used to be set in different places and a change to one left the other
+   % behind, which is how every axes in this file came to be 3.50 in wide
+   % inside a 5.51 in figure.
+   Wf = get(f, 'Position'); Wf = Wf(3);
    ax = axes('Parent', f, 'Units', 'inches', ...
-             'Position', [0.16, 0.42, 3.50 - 0.28, 1.65 - 0.42 - 0.04]);
+             'Position', [0.16, 0.42, Wf - 0.28, 1.65 - 0.42 - 0.04]);
    set(ax, 'Units', 'normalized'); hold(ax, 'on');
 
    % BOTH bounds must see every point. The first version left vIdent out of
@@ -201,9 +213,32 @@ function out = fig7_bracket(opts)
    % annotation() places in figure coordinates, and at this figure height the
    % arrow landed behind the axes and did not appear at all. Anything that
    % must be positioned relative to the data belongs in the data's own space.
-   xa = lo + 0.30 * (hi - lo); xb = lo + 0.05 * (hi - lo);
-   % Above every label row.
-   ya = yLine + 0.26 * nRows + 0.28;
+   % ON THE TOP LABEL ROW, not above it.
+   % ----------------------------------------------------------------------
+   % The arrow used to sit 0.28 above the highest label, which is a whole
+   % label row of height spent on one glyph 25 % of the axis wide. The top
+   % row does not need that height: the greedy row assignment puts a label
+   % there only when the rows below are full at that x, so at this N only
+   % 'S' is up there and everything to its right is blank. The arrow goes in
+   % that blank space, on the same row.
+   %
+   % Placed from rowEnd, the right edge of the last label actually assigned
+   % to that row, rather than from a fraction of the axis: the labels move
+   % with the data and a literal would collide the first time a method
+   % landed further right. If the span will not fit between that edge and
+   % the right limit, the arrow keeps its own row - a collision with a
+   % method name is worse than 0.26 of height.
+   span = 0.25 * (hi - lo);
+   xbMin = max(rowEnd(nRows), lo) + 1.5 * chw;
+   if xbMin + span + 0.10 * (hi - lo) <= hi
+      xb = xbMin; xa = xb + span;
+      ya = yLine + 0.26 + 0.26 * (nRows - 1) + 0.10;   % mid-height of that row
+      yTopNeed = yLine + 0.26 * nRows + 0.22;          % clears the labels only
+   else
+      xa = lo + 0.30 * (hi - lo); xb = lo + 0.05 * (hi - lo);
+      ya = yLine + 0.26 * nRows + 0.28;
+      yTopNeed = ya + 0.13;
+   end
    plot(ax, [xa xb], [ya ya], '-', 'Color', [0.35 0.35 0.35], 'LineWidth', 0.9);
    plot(ax, xb + [0.035 0 0.035] * (hi - lo), ya + [0.06 0 -0.06], '-', ...
         'Color', [0.35 0.35 0.35], 'LineWidth', 0.9);
@@ -212,7 +247,31 @@ function out = fig7_bracket(opts)
         'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle');
 
    set(ax, 'YTick', [], 'YColor', 'none');
-   ylim(ax, [0.32 ya + 0.13]); xlim(ax, [lo hi]);
+   ylim(ax, [0.32 yTopNeed]); xlim(ax, [lo hi]);
+
+   % THE SAVING HAS TO BE TAKEN OUT OF THE FIGURE, or it is not a saving.
+   % ----------------------------------------------------------------------
+   % The figure is created at the top of this function, before the labels
+   % are placed and therefore before nRows is known, so its height could not
+   % be set from the row count. Shortening the y range on its own changes
+   % nothing on the page: the axes box is still 1.19 in and the drawing just
+   % stretches to fill it, with the type unchanged and the white space
+   % merely redistributed. The figure and the axes are resized here instead,
+   % keeping the inches per y-unit the layout was tuned at, so the row the
+   % arrow gave up leaves the page with it.
+   HAX0 = 1.65 - 0.42 - 0.04;                 % the axes height as created
+   span0 = (yLine + 0.26 * nRows + 0.28) + 0.13 - 0.32;   % the old y range
+   span1 = yTopNeed - 0.32;
+   hax1  = HAX0 * span1 / span0;
+   hfig1 = 1.65 - (HAX0 - hax1);
+   set(ax, 'Units', 'inches');
+   p = get(ax, 'Position'); set(ax, 'Position', [p(1), p(2), p(3), hax1]);
+   set(ax, 'Units', 'normalized');
+   set(f, 'Units', 'inches');
+   q = get(f, 'Position'); set(f, 'Position', [q(1), q(2), q(3), hfig1]);
+   set(f, 'PaperUnits', 'inches', 'PaperSize', [q(3) hfig1], ...
+          'PaperPosition', [0 0 q(3) hfig1]);
+   fprintf('  fig7: %d label rows, figure %.2f in high (was 1.65)\n', nRows, hfig1);
    xlabel(ax, sprintf('%s at N = %d, B = %d  (n = %d, t = %d)', ...
                       opts.metric, opts.N, opts.B, opts.n, opts.t));
    fig_style('axes', ax);
@@ -237,12 +296,16 @@ end
 
 % =========================================================================
 function v = local_pick(p, B, n, t, mi)
+% designMetricScore still returns five; esLoad is appended beside it rather
+% than folded into that function, whose return arity other callers depend on.
+% The order must match STATS above - the index is all that ties them.
    [a, b, c, d, e] = designMetricScore(p(:)', B, n, t);
-   all5 = [a, b, c, d, e]; v = all5(mi);
+   all6 = [a, b, c, d, e, calc_esload_invperm(p(:)', B, n)];
+   v = all6(mi);
 end
 
 function s = local_verdict(v, vIdent, qs)
-% DIRECTION IS NOT OPTIONAL. All five design statistics measure how much a
+% DIRECTION IS NOT OPTIONAL. All six design statistics measure how much a
 % burst concentrates on a codeword, so a LARGER value is a WORSE interleaver:
 % the identity permutation returns giniLoad 0.899 at N = 1200, B = 8n, while
 % a random draw returns about 0.41. A reading written as though larger were

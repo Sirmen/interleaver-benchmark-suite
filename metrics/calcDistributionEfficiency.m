@@ -101,14 +101,30 @@ try
    efficiency.normalizedImprovements.occupancy = occupancyImprovement;
    
    % Weights
+   %
+   % adaptiveWeights WAS NEVER WRITTEN. The branch below called it, and no such
+   % function exists anywhere in the suite, so setting useAdaptiveWeights would
+   % not have produced adaptive weights - it would have raised "Undefined
+   % function" from inside the routine that computes delta_G, the paper's
+   % primary metric. The flag defaults to false (line 14) and the live caller
+   % passes four arguments, so the fixed weights below are the only path that
+   % has ever run and no published number is affected.
+   %
+   % The call is replaced by an explicit error rather than removed together
+   % with the flag, so the signature is unchanged for every caller and a
+   % request for adaptive weighting fails with a sentence instead of with a
+   % missing symbol.
    if useAdaptiveWeights
-      weights = adaptiveWeights(t_correct, beforeStats.totalNoisyPoints, beforeNoisy, afterNoisy);
-   else
-      weights.compliance = 0.35;
-      weights.margin = 0.25;
-      weights.uniformity = 0.25;
-      weights.concentration = 0.15;
+      error('calcDistributionEfficiency:adaptiveWeightsNotImplemented', ...
+            ['adaptive weighting was never implemented: this suite contains ' ...
+             'no adaptiveWeights function. Call with useAdaptiveWeights ' ...
+             'false, which is the default and the setting under which every ' ...
+             'published result was produced.']);
    end
+   weights.compliance = 0.35;
+   weights.margin = 0.25;
+   weights.uniformity = 0.25;
+   weights.concentration = 0.15;
     
    efficiency.eccAwareScore = weights.compliance * complianceImprovement + ...
                               weights.margin * marginImprovement + ...

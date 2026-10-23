@@ -25,6 +25,7 @@ Code: https://doi.org/10.5281/zenodo.XXXXXXX (GitHub: [URL])
 | `KPItableDetailed_*.csv.gz` | the same rows, as CSV, for use without MATLAB |
 | `correlation_data_*.mat` | per-trial metric values used by the validation (Section VIII) |
 | `config_*.mat` | the configuration the sweep ran with (grid, noiseLevels, regime) |
+| `factors.mat` | the precomputed divisor table (235 MB). Optional: the code runs without it and derives what it needs, and `PrimeFactorLoader` names the methods affected. Put it in `tables/` of the software record to use the cache. Too large for the git repository, which is why it is archived here |
 | `params_*`, `paramsInt_*`, `burstConfig_*` | the simulation, interleaver and burst parameters of the sweep |
 | `crossCorrResults_*` | the cross-correlation summaries, as .mat and as text |
 | `standardization_constants.csv` | per condition, the in-scope mean and standard deviation of CR and BE behind CR_z, BE_z and RES |

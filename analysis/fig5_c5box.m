@@ -82,12 +82,36 @@ function out = fig5_c5box(S, opts)
    % The suite of Table X, each design statistic at its own burst length,
    % ordered as Table IX orders them. The display labels are the paper's
    % symbols, so the figure and the table name the same things.
+   %
+   % v98: the DISCARD BLOCK at the end of the list is now the whole set of
+   % code-agnostic quantities that fail C2, ordered by |rho| as Table VIII
+   % orders them: APSR, S_new, adj_gamma, adj_CV, S_ach, gamma. They are drawn
+   % rather than only tabulated because this figure's asterisk marks a sign
+   % reversal across lengths, and that is what distinguishes gamma and S_ach -
+   % a box sitting on zero says more than a row reading 0.053. The figure sizes
+   % itself from the row count (H = 0.16*nS + 0.52), so nothing here needs a
+   % measured height.
+   %
+   % NO COMMENT LINES INSIDE THE LITERAL. A line that is only a comment ends
+   % the continuation the '...' above it opened, so its newline becomes a row
+   % separator; fig2_taxonomy.m carries the same warning after the same bug.
+   %
+   % v98: esLoad and B_guar are retained metrics of Table X and are drawn with
+   % the rest. B_guar carries no _B suffix because it is not parameterized by
+   % a burst length, so its key is the bare name the scorecard gives it.
+   %
+   % v98: PSR prints as APSR. The LEFT column is the field name in
+   % correlation_data_*.mat and does not change; only the printed label
+   % does. Renaming the left column would silently drop the metric from
+   % the figure, since the lookup would find no such field.
    if isempty(opts.metrics)
       want = { ...
          sprintf('giniLoad_B%d',  12*n), 'giniLoad (12n)'  ; ...   % v26: same B as Table IX
+         sprintf('esLoad_B%d',    12*n), 'esLoad (12n)'    ; ...   % v98: selected B, as giniLoad
          sprintf('meanMaxCW_B%d', 24*n), 'meanMaxCW (24n)' ; ...
          sprintf('maxErrCW_B%d',  24*n), 'maxErrCW (24n)'  ; ...
          sprintf('overT_B%d',     12*n), 'overT (12n)'     ; ...
+         'B_guar',                       'B_{guar}'        ; ...   % v98: no B to select
          sprintf('cvLoad_B%d',    24*n), 'cvLoad (24n)'    ; ...
          'delta_G',   '\Delta_G'   ; ...
          'eta_ES',    '\eta_{ES}'  ; ...
@@ -95,8 +119,12 @@ function out = fig5_c5box(S, opts)
          'delta_BS',  '\Delta_{BS}'; ...
          'eta_sep',   '\eta_{sep}' ; ...
          'sepMin',    'sep_{min}'  ; ...
-         'adjCV',     'CV_{adj}'   ; ...
-         'PSR',       'PSR'        };
+         'PSR',           'APSR'          ; ...
+         'Snew',          'S_{new}'       ; ...
+         'adjDispersion', 'adj_{\gamma}'  ; ...
+         'adjCV',         'adj_{CV}'      ; ...
+         'S_ach',         'S_{ach}'       ; ...
+         'dispersion',    '\gamma'        };
    else
       want = opts.metrics;
    end
@@ -138,7 +166,12 @@ function out = fig5_c5box(S, opts)
    % and a box needs a little more. 0.16 in keeps the boxes clear and takes
    % a tenth off the height.
    H = 0.16 * nS + 0.52;                  % inches: rows + ticks/label + theta
-   f = fig_style('new', 'single', H);
+   f = fig_style('new', 'wide', H);
+   % Width comes from the figure, not from a literal repeated here: the two
+   % used to be set in different places and a change to one left the other
+   % behind, which is how every axes in this file came to be 3.50 in wide
+   % inside a 5.51 in figure.
+   Wf = get(f, 'Position'); Wf = Wf(3);
    % Margins in INCHES, converted once, rather than normalized fractions
    % guessed at one figure height. The first version fixed the left margin at
    % 0.34 of the width and clipped "meanMaxCW_B180" to "neanMaxCW_B180" - a
@@ -148,7 +181,7 @@ function out = fig5_c5box(S, opts)
    leftI = min(1.45, max(0.60, 0.062 * wide + 0.22));   % room for the labels
    botI  = 0.38;                                        % ticks and the x label, no more
    ax = axes('Parent', f, 'Units', 'inches', ...
-             'Position', [leftI, botI, 3.50 - leftI - 0.12, H - botI - 0.10]);
+             'Position', [leftI, botI, Wf - leftI - 0.12, H - botI - 0.10]);
    set(ax, 'Units', 'normalized');
    hold(ax, 'on');
 

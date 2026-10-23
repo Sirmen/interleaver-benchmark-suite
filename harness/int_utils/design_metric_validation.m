@@ -108,6 +108,24 @@ function D = design_metric_validation(dataPath, opts)
    ENSEMBLE  = {'random', 'freqRandom'};   % scored over draws, not excluded
    nDraw     = local_opt(opts, 'nDraw', 15);
 
+   % SCOPE, AND WHY THE DEFAULT IS EMPTY.
+   % metric_scorecard removes freqDeterm and freqRandom from every correlation
+   % BEFORE the cells are formed, by declared scope, so the published table is
+   % computed on 23 methods. This file has always scored the full field, so its
+   % rho values sit on a DIFFERENT field from the published ones. That matters
+   % because the burst length reported with each design metric is selected from
+   % this file's B sweep while the number quoted beside it is measured by the
+   % scorecard: the selection and the value come from two different fields.
+   %
+   % The default is left empty so the file reproduces exactly what it produced
+   % before. Pass dropMethods {'freqDeterm','freqRandom'} to repeat the sweep
+   % on the in-scope field and check that the B selection does not move.
+   dropMethods = local_opt(opts, 'dropMethods', {});
+   if ischar(dropMethods), dropMethods = {dropMethods}; end
+   if ~isempty(dropMethods)
+      fprintf('  FIELD: %s excluded from every correlation\n', strjoin(dropMethods, ', '));
+   end
+
    if isempty(dataDir)
       error(['design_metric_validation: the permutation table directory is ' ...
              'required (opts.dataDir). Permutations are read from the ' ...
@@ -167,6 +185,13 @@ function D = design_metric_validation(dataPath, opts)
       meth = string(T.(mCol));
       len  = double(T.(lCol));
       res  = double(T.RES);
+
+      % Scope drop before the cells are formed. Dropping afterwards would leave
+      % holes in the cell matrix and change the support instead of the field.
+      if ~isempty(dropMethods)
+         keepRow = ~ismember(meth, string(dropMethods));
+         meth = meth(keepRow); len = len(keepRow); res = res(keepRow);
+      end
 
       % Cell means: one row per (method, length).
       [g, gm, gl] = findgroups(meth, len);
@@ -325,6 +350,77 @@ function v = local_all(p, Bset, n, t, nB)
       v(2*nB + b) = mm;
       v(3*nB + b) = cv;
       v(4*nB + b) = gi;
+   end
+end
+
+function [rhoRef, rhoRefW] = local_refRows(kpiFile, gm, gl, resBar, ~)
+%LOCAL_REFROWS  Per-trial metrics re-aggregated to the SAME cells as the design
+% statistics, so the design rows have something legitimate to be compared
+% against. Quoting Section 8's per-trial values here would set a cell-mean
+% correlation beside a per-trial one and read as an advantage that is an
+% artifact of averaging.
+%
+% RECONSTRUCTED, 2026-10. This helper was lost from the file while its call at
+% the top was left in place, so design_metric_validation could not run to
+% completion - including in release v1.0.3, which the manuscript cites. It is
+% rebuilt here from the contract stated at the call site and from
+% metric_scorecard's decoding of the same data.
+%
+% It cannot move the design-metric rows. Those are computed from permutations
+% a hundred lines above and never touch this function; only the three "ref:"
+% rows come from here.
+%
+% The published metrics are NOT columns of KPItableDetailed. They live in the
+% correlation_data_*.mat beside it, keyed by a numeric methodID whose name list
+% older files do not carry. A count check proves nothing about the ORDER: a
+% file whose method set differs from the one that wrote the codes decodes to
+% the wrong names with no symptom. An unverifiable mapping therefore returns
+% NaN rather than a plausible wrong number.
+%
+% REFS order must match the list in the main function.
+   REFS = {'delta_G', 'eta_sep', 'S_ECC'};
+   nR = numel(REFS);
+   rhoRef = nan(nR, 1); rhoRefW = nan(nR, 1);
+
+   cf = strrep(kpiFile, 'KPItableDetailed_', 'correlation_data_');
+   if exist(cf, 'file') ~= 2, return; end
+   L = load(cf); fn = fieldnames(L); D = [];
+   for i = 1:numel(fn)
+      if isstruct(L.(fn{i})), D = L.(fn{i}); break; end
+   end
+   if isempty(D) || ~isfield(D, 'methodID') || ~isfield(D, 'encodedLen'), return; end
+   if ~isfield(D, 'methodNames')
+      fprintf(2, ['\n  local_refRows: %s carries no methodNames, so the methodID ' ...
+                  'mapping cannot be verified. Reference rows left NaN; run ' ...
+                  'fix_correlation_data to record the names.\n'], cf);
+      return;
+   end
+
+   nameList = cellstr(D.methodNames(:));
+   mid  = double(D.methodID(:));
+   dlen = double(D.encodedLen(:));
+   if numel(mid) ~= numel(dlen) || max(mid) > numel(nameList) || min(mid) < 1, return; end
+   if ~isequal(sort(unique(mid))', 1:numel(nameList)), return; end
+
+   nm = string(nameList(mid));
+   [g2, m2, l2] = findgroups(nm, dlen);
+   key  = strcat(string(gm), '_', string(gl));
+   key2 = strcat(string(m2), '_', string(l2));
+   [tf2, loc] = ismember(key2, key);
+
+   for c = 1:nR
+      if ~isfield(D, REFS{c}), continue; end
+      x = double(D.(REFS{c})(:));
+      if numel(x) ~= numel(mid), continue; end
+      cm = splitapply(@(z) mean(z, 'omitnan'), x, g2);
+      v  = nan(numel(gm), 1);
+      v(loc(tf2)) = cm(tf2);
+
+      ok = isfinite(v) & isfinite(resBar);
+      if sum(ok) > 10 && numel(unique(v(ok))) > 1
+         rhoRef(c) = corr(v(ok), resBar(ok), 'type', 'Spearman');
+      end
+      rhoRefW(c) = local_withinLength(v, resBar, gl);
    end
 end
 

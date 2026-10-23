@@ -44,8 +44,15 @@ function out = fig4_bsweep(S, opts)
             '    fig4_bsweep(S)']);
    end
    if nargin < 2, opts = struct(); end
+   % esLoad joins the sweep as the sixth B-parameterized load statistic. It
+   % belongs here and B_guar does not: B_guar returns a burst length instead
+   % of taking one, so it has no curve to draw against B.
+   % NOT MEASURED: the legend sits inside the axes, top left, sized for five
+   % entries. A sixth entry extends it downwards. esLoad is under 0.35 at
+   % B <= 2n like the others, so the corner is still empty, but check the
+   % export and raise the figure height if the legend reaches a curve.
    if ~isfield(opts, 'stats')
-      opts.stats = {'giniLoad', 'meanMaxCW', 'maxErrCW', 'overT', 'cvLoad'};
+      opts.stats = {'giniLoad', 'esLoad', 'meanMaxCW', 'maxErrCW', 'overT', 'cvLoad'};
    end
    if ~isfield(opts, 'n'),      opts.n = 15;      end
    if ~isfield(opts, 'save'),   opts.save = true; end
@@ -74,9 +81,14 @@ function out = fig4_bsweep(S, opts)
    % height. Top left is empty by construction: at B below 2n every
    % statistic sits under 0.3, and the axis is fixed at [0 1], so a vertical
    % legend there covers no curve - the author's v18 layout, now in code.
-   f = fig_style('new', 'single', 2.0);
+   f = fig_style('new', 'wide', 2.0);
+   % Width comes from the figure, not from a literal repeated here: the two
+   % used to be set in different places and a change to one left the other
+   % behind, which is how every axes in this file came to be 3.50 in wide
+   % inside a 5.51 in figure.
+   Wf = get(f, 'Position'); Wf = Wf(3);
    ax = axes('Parent', f, 'Units', 'inches', ...
-             'Position', [0.44, 0.38, 3.50 - 0.52, 2.0 - 0.38 - 0.05]);
+             'Position', [0.44, 0.38, Wf - 0.52, 2.0 - 0.38 - 0.05]);
    set(ax, 'Units', 'normalized'); hold(ax, 'on');
 
    out = struct('stat', {}, 'B', {}, 'rho', {}, 'plateauFrom', {});

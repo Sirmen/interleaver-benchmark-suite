@@ -20,6 +20,8 @@
 %
 % NOT: adim 6 yok (numaralandirma tarihsel). run_simulations.m ve
 %      analyze_and_plot_results.m ARTIK KULLANILMIYOR; canli yol _sci'dir.
+%      Asagidaki klasor listeleri _sci kapanisina gore guncellendi
+%      (2026-10-23): eski hattan erisilen dosyalar karantinaya alindi.
 %
 % -------------------------------------------------------------------------
 % interleaversTest/            ust seviye akis
@@ -52,9 +54,8 @@
 %  genGilbertElliottMask.m     iki durumlu Markov patlama kanali        [YENI]
 %  burstRegimeTag.m            single/multi/ge1p00/ge0p70 dosya oneki   [YENI]
 %  encoderRS_CW.m  decoderRS_CW.m  decodeRS_all.m  calcDecErrorRates_all.m
-%  calcAvIntRuntime_all.m  calcAvDecodeErrRate_all.m  calcAvEfficiency_all.m
-%  calcEfficiency_all.m  calcInfoRates_all.m  calcCR_all.m
-%  isNoiseLevelOk_all.m  estimate_L_for_size.m  calculateSNR.m
+%  calcAvIntRuntime_all.m  calcCR_all.m
+%  estimate_L_for_size.m  calculateSNR.m
 %  collectStatistics_all.m     yontemler uzerinde doner
 %    -> collectStatistics_x.m  TUM OLCUTLER burada toplanir:
 %         calcErrorSpreadingMetrics   eta_ES, delta_BS
@@ -63,7 +64,7 @@
 %         calc_spread_factor_invperm  S_factor
 %         intraVectorSeparations      sepMin, sepAvg, eta_sep, sepCV
 %         calcAdjDist                 adjMin, adjAvg, adjCV
-%         analyzeSpectralProperties   PSR
+%         analyzeSpectralProperties   PSR   -> metrics/calc_apsr
 %         calcLaplacianEnergy         laplacianEnergy
 %         measureBurstDistribution    delta_G
 %  calcKPIs.m  calcKPIs_engine.m  calcANOVA_analysis.m
@@ -79,8 +80,7 @@
 %                                    -> calcGiniCoefficient.m
 %                                    -> assessECCSustainability.m
 %  intraVectorSeparations_.m  intraVectorDistances_.m  calcLaplacianEnergy_.m
-%  calcECCViolations.m  calcECCMargin.m  calcDistanceSpectrum.m
-%  calcPeriodicityMetrics.m  calcPermutationRandomness.m  verifyMetricsCollection.m
+%  calc_apsr.m
 %
 % -------------------------------------------------------------------------
 % int_common/                  paylasilan yardimcilar
@@ -88,7 +88,7 @@
 %  swapRowsOddEven.m  swapColsOddEven.m       (S-Interleaving takas cekirdegi)
 %  controlCorrectShape_1N.m  controlCorrectShape_N1.m
 %  extractMetricData.m  formatMetricNames.m  getMethodStats.m
-%  prepare_correlation_data.m  prepare_cross_correlation_data.m
+%  prepare_correlation_data.m
 %
 % -------------------------------------------------------------------------
 % interleavers/  (int_<yontem>/ alt klasorleri)      24 YONTEM
@@ -120,13 +120,10 @@
 %  PrimeFactor_PrecomputedLoader.m
 %
 % -------------------------------------------------------------------------
-% analyzeSimulationHealth/     saglik/saglamlik protokolu (adim 4 icinde)
+% health/                      kampanya saglik kontrolleri H0-H6
 % -------------------------------------------------------------------------
-%  analyzeSimulationHealth.m -> check_sample_sizes  check_noise_balance
-%     check_method_balance  check_cross_balance  check_data_quality
-%     check_normality_assumptions  check_homoscedasticity  check_independence
-%     check_outliers  check_data_completeness  check_robustness_estimation
-%     calculate_post_hoc_power  calculate_post_hoc_power_ancova
+%  health_check.m       H0-H6; her kontrol verdict dondurur, puan vermez
+%  health_selftest.m    her bloke eden kontrolun BASARISIZ olabildigini gosterir
 %
 % -------------------------------------------------------------------------
 % int_plotting/  (plot_all_results.m tarafindan cagrilir)

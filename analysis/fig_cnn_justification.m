@@ -6,28 +6,27 @@ function out = fig_cnn_justification(dataPath, opts)
 %
 % WHAT THE FIGURE ARGUES
 % ===========================================================================
-% Section VI-B claims three things about C_NN, and each panel is one of them.
+% TWO panels: the effect, and its consequence.
 %
 %   (a) Methods that extend the frame receive a LOWER error density. The burst
 %       mask is generated at the encoded length and zero-extended, so every
 %       method takes the same absolute number of corrupted symbols while the
-%       denominator grows. Panel (a) plots the realized noiseActual against
-%       the target for every method, so the extending methods separate
-%       downward from the line the others sit on.
+%       denominator grows. Panel (a) plots each method's realized density
+%       DIVIDED BY that of the unextended methods, bin by bin, so the
+%       extending ones become flat lines at their own bandwidth efficiency
+%       and the unextended ones at 1.
 %
-%   (b) The separation is exactly the frame extension and nothing else. Panel
-%       (b) plots each method's mean noiseActual against its BE. If the
-%       mechanism is dilution, the points lie on noiseActual = target x BE,
-%       which is drawn as a line rather than fitted.
+%   (b) The correction is what removes the advantage. Panel (b) plots the
+%       percentage of CR that C_NN takes back from each method, and marks the
+%       ones whose rank changes because of it.
 %
-%   (c) The correction is what removes the advantage. Panel (c) shows each
-%       method's mean CR before and after C_NN. The extending methods lose
-%       exactly the credit the dilution gave them; the others do not move.
-%
-% Panel (b) is the load-bearing one. It is the difference between asserting a
-% mechanism and showing it: a fitted line through those points would prove
-% only that something is monotone, whereas the drawn line is the prediction
-% C_NN is derived from, with no free parameter.
+% The mechanism itself - that the separation is exactly the frame extension
+% and nothing else - was a third panel: realized density against BE with the
+% identity drawn rather than fitted. It was the load-bearing claim and the
+% worst possible use of a panel, because the identity holds to 2e-15 and a
+% scatter plot looks the same at 1e-3. The number is in the caption instead,
+% and this function prints it (resid, below) every time it runs. What is left
+% in the figure is the part a reader can only get from a picture.
 %
 % WHY IT IS SEPARATE FROM THE HEALTH CHECK
 % ===========================================================================
@@ -234,12 +233,31 @@ function out = fig_cnn_justification(dataPath, opts)
    % same type and weights as the other six. It was previously created at
    % 1020 by 440 pixels with 12 pt text and scaled on insertion, which scales
    % the text with it: the point sizes below then mean nothing.
-   % ONE COLUMN, PANELS STACKED. Side by side the figure spanned both columns
-   % at 2.6 in, i.e. 5.2 column-inches plus a full-width caption and two
-   % section breaks. Stacked at 3.5 in wide it is about 3.6 in in one column:
-   % roughly 1.8 column-inches (about eleven lines of text) fewer, and no
-   % section break to unbalance the columns.
-   fig = fig_style('new', 'single', 3.66);
+   %
+   % PANELS SIDE BY SIDE, AND WHAT THAT COSTS.
+   % ----------------------------------------------------------------------
+   % They used to be stacked, on the argument that side by side would span
+   % both columns and cost 5.2 column-inches against 3.6 for the stack. That
+   % arithmetic is IEEE's: it assumes two columns and a figure that can
+   % straddle them. This paper goes to a venue that sets ONE column, so there
+   % is no second column to spill into and no section break to unbalance -
+   % the only quantity left is page height. Side by side it is 2.32 in
+   % against 3.66 stacked, about eight lines of text.
+   %
+   % The cost is real and it is horizontal. Both panels reserve part of their
+   % own x-axis for text: (a) for the direct curve labels on the right, (b)
+   % for the percentage at the end of each bar. Halving the width halves that
+   % reserve in inches while the text stays the same number of points, so
+   % three budgets had to shrink with it - the rank annotation to an arrow,
+   % the "others" note, and the bar-text headroom (xlim factor 1.9 to 1.75) -
+   % and (a)'s label reserve had to GROW in data units to hold its physical
+   % size. Those are the four places to look first if anything collides.
+   fig = fig_style('new', 'wide', 2.32);
+   % Width comes from the figure, not from a literal repeated here: the two
+   % used to be set in different places and a change to one left the other
+   % behind, which is how every axes in this file came to be 3.50 in wide
+   % inside a 5.51 in figure.
+   Wf = get(fig, 'Position'); Wf = Wf(3);
    set(fig, 'Name', ['C_NN justification - ' tag]);
    cPad = [0.80 0.15 0.15]; cNo = [0.38 0.43 0.50];
    padPal = [0.80 0.15 0.15; 0.90 0.50 0.10; 0.55 0.10 0.55; 0.10 0.45 0.70; 0.20 0.55 0.25];
@@ -315,7 +333,13 @@ function out = fig_cnn_justification(dataPath, opts)
    v0 = min(allv(:)); v1 = max([allv(:); 1]);
    m  = max(0.06 * (v1 - v0), 0.0015);
    ylim([v0 - m, v1 + m]);
-   xlim([0.5, nB + 0.5 + max(2.2, 0.45 * nB)]);
+   % The reserve is in DATA units and the labels are in points, so a narrower
+   % axes turns the same reserve into less physical room. Side by side the
+   % axes is 2.07 in rather than 4.7, which left about 0.64 in for a label
+   % reading "blockRandom," - roughly its own width. Raised to three bins,
+   % which is 0.77 in here, at the cost of squeezing five flat lines into
+   % 1.3 in of data width; they are flat, so they do not need the width.
+   xlim([0.5, nB + 0.5 + max(3.0, 0.60 * nB)]);
    xr = nB + 0.62;
    text(xr, 1, sprintf('no extension\nBE = 1'), 'Color', cNo, ...
         'FontSize', FSl, 'FontName', Sty.font, 'VerticalAlignment', 'middle');
@@ -326,11 +350,23 @@ function out = fig_cnn_justification(dataPath, opts)
       text(xr, lev, sprintf('%s\nBE = %.3f', nmTxt, lev), 'Color', c, ...
            'FontSize', FSl, 'FontName', Sty.font, 'VerticalAlignment', 'middle');
    end
-   set(gca, 'XTick', 1:nB, 'XTickLabel', arrayfun(@(t) sprintf('%.3g', t), ...
-            cfg.noiseLevels(uB), 'UniformOutput', false), 'FontSize', FS);
+   % EVERY TICK MARK, EVERY OTHER LABEL. Side by side the data occupy about
+   % 1.3 in, so five labels reading '0.202' are 0.25 in each against a tick
+   % pitch of 0.26, and the rendered figure showed them run together as
+   % '0.180.2020.2240.2460.268'. Rounding to two decimals would fit, but the
+   % grid is evenly spaced by 0.022 and rounding makes it look uneven
+   % (0.18, 0.20, 0.22, 0.25, 0.27), which is a worse fault than a missing
+   % label. The values therefore stay exact and the intermediate labels are
+   % dropped; the marks stay, so the axis still reads as five levels.
+   tickLab = arrayfun(@(t) sprintf('%.3g', t), cfg.noiseLevels(uB), ...
+                      'UniformOutput', false);
+   if nB >= 4, tickLab(2:2:end) = {''}; end
+   set(gca, 'XTick', 1:nB, 'XTickLabel', tickLab, 'FontSize', FS);
    xlabel('target noise density', 'FontSize', FS);
    ylabel({'realized density,'; 'relative to BE = 1'}, 'FontSize', FS);   % two lines: the axis is 1.3 in tall
-   title('(a) an extended frame dilutes the burst by exactly BE', 'FontSize', FSt);
+   % Two lines: at 2.07 in a 52-character title runs off both ends of its own
+   % panel and over the neighbour's.
+   title({'(a) an extended frame dilutes'; 'the burst by exactly BE'}, 'FontSize', FSt);
    % The xlim set above leaves room on the right for the direct labels. A
    % second xlim here used to reset it to the data range, which pushed every
    % label out of its own axes and on top of panel (b)'s method names.
@@ -350,35 +386,55 @@ function out = fig_cnn_justification(dataPath, opts)
       barh(i, lost(j), 0.6, 'FaceColor', cPad, 'EdgeColor', 'none');
       lbl = sprintf('  %.2f%%', lost(j));
       if r0(j) ~= r1(j)
-         lbl = sprintf('  %.2f%%   rank %d to %d', lost(j), r0(j), r1(j));
+         % "rank 4 to 5" is 21 characters with the percentage in front, which
+         % is about 1.05 in of 8 pt Times against the 0.9 in this panel has
+         % for text once it is half width. The arrow says the same thing in
+         % twelve characters; \rightarrow needs the default tex interpreter,
+         % which is what text() uses.
+         lbl = sprintf('  %.2f%%  %d\\rightarrow%d', lost(j), r0(j), r1(j));
       end
       text(lost(j), i, lbl, 'FontSize', FSl, 'FontName', Sty.font, 'VerticalAlignment', 'middle');
    end
    set(gca, 'YTick', 1:numel(show), 'YTickLabel', uM(show), 'FontSize', FS, ...
             'TickLabelInterpreter', 'none');
-   xlim([0 max(lost(show))*1.9 + 0.1]); ylim([0 numel(show)+1]);
-   title('(b) the CR credit C_{NN} takes back, per method', 'FontSize', FSt);
+   % 1.75 rather than 1.9: the bar text is shorter now, so the headroom that
+   % used to hold it can go back to the bars, which are what carries the
+   % reading at half width.
+   xlim([0 max(lost(show))*1.75 + 0.1]); ylim([0 numel(show)+1]);
+   title({'(b) the CR credit C_{NN}'; 'takes back, per method'}, 'FontSize', FSt);
    grid on;
    xlabel('CR credit removed (%)', 'FontSize', FS);
    xl = xlim;
-   text(xl(2), 0.4, sprintf('all other methods < 0.1 %%   '), ...
+   % "all other methods < 0.1 %" is 1.25 in of 8 pt type inside a 2.07 in
+   % axes, so right-aligned it reached back under the longest bar. The
+   % caption carries the full sentence; the panel only needs the number.
+   text(xl(2), 0.4, sprintf('others < 0.1 %%  '), ...
         'FontSize', FSl, 'FontName', Sty.font, 'HorizontalAlignment', 'right', 'Color', [0.35 0.35 0.35]);
 
    % Both panels through the shared axis style, then the shared exporter, so
    % this figure and the other six leave in the same formats at the same size.
    for a = findobj(fig, 'Type', 'axes')', fig_style('axes', a); end
-   % Positions in inches. subplot's defaults leave about 0.3 in under the
-   % tick labels and a wide gutter; the manuscript wants the lines back.
-   % Panel (a) keeps room on its right for the direct labels (inside its own
-   % x-limits); panel (b) needs about 0.85 in for the method names.
-   % Stacked: (a) on top with its direct labels inside its own x-limits,
-   % (b) below with about 0.85 in for the method names. Vertical budget in
-   % inches: (b) axes 0.40-1.48, its title to about 1.66; (a) ticks and label
-   % need about 0.40 under its axes, so (a) starts at 2.12 and its one-line
-   % title ends near 3.64. The two-line y label needs 0.74 in on the left.
+   % Positions in inches, and they are what decides the layout - subplot's
+   % 1-by-2 above only creates the two axes. The two used to disagree:
+   % subplot asked for side by side and this block overrode it to a stack at
+   % full width, so reading the subplot call told you the opposite of what
+   % was drawn. They now say the same thing.
+   %
+   % THE HORIZONTAL BUDGET, which is the tight one.
+   %   Lm    (a)'s two-line y label plus its tick labels
+   %   Gut   (b)'s y tick labels ARE the method names, and they sit to the
+   %         left of its axes, so the gutter is not whitespace
+   %   Rm    enough that the last x tick label does not touch the edge
+   % What is left is split evenly: neither panel has a claim on more.
+   Lm = 0.60; Gut = 0.70; Rm = 0.08;
+   Wp = (Wf - Lm - Gut - Rm) / 2;
+   % Vertical: 0.46 under the axes for the x tick labels and the x label,
+   % 1.52 of axes, and about 0.34 above for a two-line title - 2.32 in, which
+   % is the height asked of fig_style.
+   Bm = 0.46; Hp = 1.52;
    set([axA axB], 'Units', 'inches');
-   set(axA, 'Position', [0.74, 2.12, 3.50 - 0.74 - 0.06, 1.34]);
-   set(axB, 'Position', [0.86, 0.40, 3.50 - 0.86 - 0.08, 1.08]);
+   set(axA, 'Position', [Lm,             Bm, Wp, Hp]);
+   set(axB, 'Position', [Lm + Wp + Gut,  Bm, Wp, Hp]);
    set([axA axB], 'Units', 'normalized');
    if opts.save
       files = fig_style('save', fig, opts.stem, opts.figPath);

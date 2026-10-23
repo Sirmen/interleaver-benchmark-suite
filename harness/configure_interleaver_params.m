@@ -97,12 +97,38 @@ function paramsInt = configure_interleaver_params(paramsInt, config, encoded, in
    paramsInt.multiDim_nDims = 3;
    
    % Convolutional parameters
-   % paramsInt.bufferRows = max(2, round(paramsInt.L * 0.6));
-   % paramsInt.bufferSlope = max(2, round(paramsInt.bufferRows * 1.8));
-   [M, D, erM] = calc_optimal_M_D_convolutional(encodedLen, tables.table_primes);
-   if erM ~= "";  error(strcat('Error in configure_interleaver_params: ', erM));  end
-   paramsInt.bufferRows = M;  % number of parallel shift registers or branches
-   paramsInt.bufferSlope = D; % delay increment applied between successive branches. Delay of branch i is (i-1)xD
+   %
+   % NOTHING IS SET HERE, AND THAT IS THE CORRECTION.
+   %
+   % These lines used to read
+   %
+   %     [M, D, erM] = calc_optimal_M_D_convolutional(encodedLen, tables.table_primes);
+   %     if erM ~= ""; error(...); end
+   %     paramsInt.bufferRows  = M;
+   %     paramsInt.bufferSlope = D;
+   %
+   % and calc_optimal_M_D_convolutional no longer exists anywhere on the path.
+   % It was removed together with the delay-step search it performed - the
+   % search that local_forneyD in interleaver_convolutional.m records as having
+   % given this baseline an advantage the published method does not have - but
+   % the call site was left behind. Since this file sits on the main sweep
+   % entry path (run_simulations_sci -> configure_interleaver_params), the
+   % released suite raised "Undefined function" before a sweep could start.
+   %
+   % Removing the call changes no result. bufferRows and bufferSlope were
+   % WRITE-ONLY: no file in the release reads paramsInt.bufferRows or
+   % paramsInt.bufferSlope. Both live call sites pass neither -
+   % interleaver_generic_pc.m:169 and PrecomputeInterleaversGenerator.m:281 use
+   %
+   %     interleaver_convolutional(x, [], [], pad, mx)
+   %
+   % so M and D are chosen inside interleaver_convolutional.m by its own
+   % declared rules (M = largest divisor of N at most sqrt(N); D = 1, after
+   % Ramsey and Forney). The identically named locals in
+   % compareInterleaverMetrics and the bufferRows_conv / bufferSlope_conv
+   % fields in interleave_all_pc are different variables and are unaffected.
+   %
+   % convCM is the other consumer and is configured from FECn below, not here.
 
    % Chaotic parameters
    paramsInt.rChaotic = 3.9;

@@ -1,8 +1,9 @@
 function out = fig_style(action, varargin)
 %FIG_STYLE  One visual system for every figure in the manuscript.
 %
-%   f = fig_style('new', 'single')          % 3.5 in wide, one column
-%   f = fig_style('new', 'double', 2.6)     % 7.16 in wide, height in inches
+%   f = fig_style('new', 'single')          % 90 mm, one column
+%   f = fig_style('new', 'wide', 2.1)       % 140 mm, height in inches
+%   f = fig_style('new', 'double', 2.6)     % 190 mm, across the page
 %   fig_style('axes', gca)                  % fonts, ticks, box, grid
 %   fig_style('save', f, 'fig4_bsweep')     % EMF for Word, PDF for submission
 %   c = fig_style('colors');  m = fig_style('markers');
@@ -17,9 +18,27 @@ function out = fig_style(action, varargin)
 % style is one edit and not seven.
 %
 % WIDTHS
-% IEEE Transactions is two columns, 3.5 in each, 7.16 in across both. A figure
-% drawn at some other width is scaled on insertion, which rescales the text
-% with it and breaks the point sizes below. Draw at final size; never scale.
+% Draw at final size; never scale. A figure drawn at some other width is
+% scaled on insertion, which rescales the text with it and breaks the point
+% sizes below.
+%
+% The sizes here are Elsevier's, because that is where this paper goes:
+% 90 mm for one column, 140 mm for one and a half, 190 mm across the page
+% (3.54, 5.51 and 7.48 in).
+%
+% 'wide' IS THE DEFAULT FOR THIS PAPER, and 'single' is the exception.
+% Computers & Electrical Engineering sets its articles in ONE column, checked
+% against five recent issues, so the published text block is about 150 mm.
+% A 90 mm figure therefore wastes two fifths of the line in the printed
+% article, not merely in the submitted manuscript. 140 mm is about 93 % of
+% the block and is as wide as a figure can usefully be; 190 mm overflows it
+% and the typesetter scales the figure down, which rescales the type with it
+% and voids every point size below.
+%
+% This file used to carry IEEE's doctrine - 3.5 in for one column of two,
+% 7.16 in across both, no third size - and every figure asked for 'single'
+% on that basis. That is right for a two-column venue and wrong here. Use
+% 'single' only if the paper moves to one.
 %
 % COLOUR AND GREY
 % Journals are read on paper and on screen. Every series therefore carries a
@@ -29,7 +48,7 @@ function out = fig_style(action, varargin)
 %
 % EXPORT
 % EMF is vector inside Word, which is what the .docx manuscript needs; PDF is
-% vector for the eventual IEEEtran submission. Both are written, from the same
+% vector for the journal submission. Both are written, from the same
 % figure, so the two versions of the paper cannot show different artwork.
 % exportgraphics is used where available (R2020a+) because it crops to the
 % axes; print is the fallback.
@@ -52,8 +71,9 @@ end
 function f = local_new(width, heightIn)
    if nargin < 1 || isempty(width), width = 'single'; end
    switch lower(width)
-      case 'single', W = 3.50;
-      case 'double', W = 7.16;
+      case 'single', W = 3.54;     % Elsevier 90 mm
+      case 'wide',   W = 5.51;     % Elsevier 140 mm, one and a half columns
+      case 'double', W = 7.48;     % Elsevier 190 mm, across the page
       otherwise,     W = width;          % a number, in inches
    end
    if nargin < 2 || isempty(heightIn), heightIn = W * 0.62; end
@@ -90,8 +110,21 @@ function files = local_save(f, stem, outDir)
 % Write the same figure as EMF and PDF. A figure that exists only on screen
 % is not a deliverable, and one exported at a different size than it was
 % drawn at carries text at the wrong point size.
+   % WHERE THE FILES GO. A caller that names a folder gets that folder. A
+   % caller that does not is answered by the environment, then by <pwd>/figures.
+   %
+   % The environment, and not a path written into a file: check_hardcoded_paths
+   % flags any line carrying a drive letter, a /Users, or OneDrive, because a
+   % release that writes only to one machine's desktop is a release that runs
+   % on one machine - and because the path would carry an account name into a
+   % public archive. Set it once per machine instead, in startup.m:
+   %
+   %    setenv('PAPER_FIG_DIR', 'D:\somewhere\paper_figures')
+   %
+   % Every figure script inherits it; none of them has to be edited.
    if nargin < 3 || isempty(outDir)
-      outDir = fullfile(pwd, 'figures');
+      outDir = getenv('PAPER_FIG_DIR');
+      if isempty(outDir), outDir = fullfile(pwd, 'figures'); end
    end
    if exist(outDir, 'dir') ~= 7, mkdir(outDir); end
    base = fullfile(outDir, stem);

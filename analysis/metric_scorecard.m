@@ -59,7 +59,21 @@ function S = metric_scorecard(dataPath, opts)
    ENSEMBLE  = {'random', 'freqRandom'};
    PUB = {'delta_G','eta_ES','S_ECC','eta_sep','delta_BS','PSR','U_ECC', ...
           'V_ECC','adjMin','sepMin','adjCV','laplacianEnergy','S_sf','S_factor'};
-   STATS = {'overT','maxErrCW','meanMaxCW','cvLoad','giniLoad'};
+   % esLoad joins STATS as the sixth B-parameterized load statistic. Nothing
+   % else in this file needed changing for it: names, the accumulator width
+   % and the held-out B selection are all written in terms of numel(STATS),
+   % and its slot in local_allStats is index 5, after the five that were
+   % there. The first five keep their indices, so no existing number moves.
+   STATS = {'overT','maxErrCW','meanMaxCW','cvLoad','giniLoad','esLoad'};
+
+   % DET: computed from the permutation like STATS, but NOT parameterized by
+   % a burst length, so they take one column each instead of one per B and
+   % the held-out B selection below does not apply to them. B_guar returns a
+   % burst length rather than consuming one; the other four are functions of
+   % the permutation alone. Scored here rather than only in
+   % design_metric_extension so that the scorecard, Tables IX, XI and XIII
+   % and Figures 4 and 5 see the same columns.
+   DET = {'B_guar','dispersion','Snew','S_ach','adjDispersion'};
 
    % TWO DIFFERENT FOLDERS, and they are easy to swap by accident.
    %   dataPath (arg 1) holds the sweep output, KPItableDetailed_*.mat etc.
@@ -83,8 +97,35 @@ function S = metric_scorecard(dataPath, opts)
 
    [tpc, erT] = PrecomputedInterleaverLoader(tableDir);
    if erT ~= "", error('metric_scorecard: %s', erT); end
+   % factors.mat IS NOT NEEDED HERE, and requiring it made the published
+   % repository unable to run this file.
+   %
+   % tp and tfac are passed to exactly one call, the ENSEMBLE branch of
+   % local_cellMatrix, which draws permutations for the two methods that
+   % redraw every frame. Neither of them reads the tables:
+   %     case 'random'      interleaver_random(x, Le, seed, pad, mx)
+   %     case 'freqRandom'  interleaver_freqRandom(x, pad, mx, seed)
+   % and interleaver_generic_pc itself defaults table_primes to [] and
+   % table_factors to struct() when they are not supplied. Every other method
+   % comes from the precomputed permutation table, not from the factor table.
+   %
+   % factors.mat is 235 MB, over GitHub's per-file limit, and .gitignore
+   % excludes it with the note that it ships with the campaign data archive -
+   % where DATA_README does not list it. So the file was required to start,
+   % absent from both published records, and unused once loaded: a reader
+   % could not run metric_scorecard, and therefore could not run
+   % reproduce_paper, which is the claim the release exists to support.
+   %
+   % Loading it is kept, because a local copy makes the ensemble path
+   % identical to the sweep's; failing without it is not. No number moves:
+   % the two arguments reach only callees that ignore them.
    [tp, tfac, erP] = PrimeFactorLoader(tableDir);
-   if erP ~= "", error('metric_scorecard: %s', erP); end
+   if erP ~= ""
+      fprintf(2, ['metric_scorecard: %s\n' ...
+                  '  continuing without the factor table: it is passed only to the two\n' ...
+                  '  live-draw methods, which do not read it.\n'], erP);
+      tp = []; tfac = struct();
+   end
 
    d = dir(fullfile(dataPath, 'KPItableDetailed_*.mat'));
    if isempty(d), error('metric_scorecard: no KPItableDetailed_*.mat found'); end
@@ -140,6 +181,11 @@ function S = metric_scorecard(dataPath, opts)
          names{end+1} = sprintf('%s_B%d', STATS{k}, Bset(b)); %#ok<AGROW>
       end
    end
+   % DET last, so the PUB block and the STATS block keep the column indices
+   % they had and every existing result is addressed as before.
+   for k = 1:numel(DET)
+      names{end+1} = DET{k}; %#ok<AGROW>
+   end
    nM = numel(names);
 
    fprintf('\n=================================================================\n');
@@ -161,7 +207,7 @@ function S = metric_scorecard(dataPath, opts)
       [lbl, grd] = local_label(d(si).name);
       fprintf('  %-18s ', lbl);
 
-      [X, resBar, gm, gl] = local_cellMatrix(f, names, PUB, STATS, Bset, ...
+      [X, resBar, gm, gl] = local_cellMatrix(f, names, PUB, STATS, DET, Bset, ...
                                 FECn, FECt, tpc, tp, tfac, ENSEMBLE, nDraw, max(Bset), dropMethods);
       if isempty(X), fprintf('skipped\n'); continue; end
 
@@ -301,6 +347,10 @@ function S = metric_scorecard(dataPath, opts)
            'between', 'med/len', 'IQR/len', '95% CI (cell)', 'pass', 'ratio to ref [CI]');
    fprintf('  %s\n', repmat('-', 1, 96));
    ratios = nan(nM, 3);
+   % The printed table also goes to CSV. A console dump has to be copied by
+   % hand to be read anywhere else, and a hand-copied table is a table that
+   % can be truncated without anyone noticing.
+   csvRows = cell(nM, 1);
    for kk = 1:nM
       c = ord(kk);
       allB = cell2mat(cellfun(@(z) z(c, :), BOOT, 'UniformOutput', false));
@@ -319,8 +369,30 @@ function S = metric_scorecard(dataPath, opts)
       fprintf('  %-20s %8.3f %s %8.3f %8.3f %8.3f [%.3f, %.3f] %3d/%d %.3f [%.3f, %.3f]\n', ...
               names{c}, mAbs(c), tstr, mBw(c), mMd(c), mIq(c), lo, hi, ...
               pass(c), nS, ratios(c,1), ratios(c,2), ratios(c,3));
+      if c <= numel(PUB) && isfinite(mTri(c))
+         tnum = sprintf('%.6g', mTri(c));
+      else
+         tnum = '';
+      end
+      csvRows{kk} = sprintf('%s,%.6g,%s,%.6g,%.6g,%.6g,%.6g,%.6g,%d,%d,%.6g,%.6g,%.6g', ...
+         names{c}, mAbs(c), tnum, mBw(c), mMd(c), mIq(c), lo, hi, ...
+         pass(c), nS, ratios(c,1), ratios(c,2), ratios(c,3));
    end
    fprintf('  %s\n', repmat('-', 1, 96));
+
+   % ---- the same table as a file -----------------------------------------
+   try
+      outCsv = fullfile(dataPath, 'scorecard_metrics.csv');
+      fid = fopen(outCsv, 'w');
+      if fid < 0, error('cannot open %s', outCsv); end
+      fprintf(fid, ['metric,cell,trial,between,med_len,IQR_len,ci_lo,ci_hi,' ...
+                    'pass,nCond,ratio_to_ref,ratio_lo,ratio_hi\n']);
+      for kk = 1:nM, fprintf(fid, '%s\n', csvRows{kk}); end
+      fclose(fid);
+      fprintf('  wrote %s\n', outCsv);
+   catch err
+      fprintf(2, '  could not write the scorecard CSV: %s\n', err.message);
+   end
    fprintf(['\n  "between" is the Spearman correlation of the LENGTH MEANS - the metric\n' ...
             '  averaged over methods at each N against RES averaged the same way. It\n' ...
             '  isolates the trend with N that a pooled correlation mixes into the\n' ...
@@ -377,7 +449,7 @@ function S = metric_scorecard(dataPath, opts)
 end
 
 %% ------------------------------------------------------------------------
-function [X, resBar, gm, gl] = local_cellMatrix(kpiFile, names, PUB, STATS, ...
+function [X, resBar, gm, gl] = local_cellMatrix(kpiFile, names, PUB, STATS, DET, ...
                                     Bset, n, t, tpc, tp, tfac, ENSEMBLE, nDraw, minN, dropMethods)
 % One row per (method, length): cell-mean of every published metric, and the
 % design statistics of that method's permutation. Same rows, same unit.
@@ -475,18 +547,20 @@ function [X, resBar, gm, gl] = local_cellMatrix(kpiFile, names, PUB, STATS, ...
    for k = 1:numel(gm)
       mn = char(gm(k));
       if ismember(mn, ENSEMBLE)
-         acc = zeros(1, numel(STATS)*nB); got = 0;
+         acc = zeros(1, numel(STATS)*nB + numel(DET)); got = 0;
          for dr = 1:nDraw
             [~, p] = interleaver_generic_pc(1:gl(k), mn, 0, 0, [], 1000+dr, tp, tfac, struct());
             if isempty(p), continue; end
-            acc = acc + local_allStats(p, Bset, n, t, numel(STATS));
+            acc = acc + [local_allStats(p, Bset, n, t, numel(STATS)), ...
+                         local_detStats(p, n, t, numel(DET))];
             got = got + 1;
          end
          if got > 0, X(k, nP+1:end) = acc / got; end
       else
          p = local_perm(tpc, mn, gl(k));
          if isempty(p), continue; end
-         X(k, nP+1:end) = local_allStats(p, Bset, n, t, numel(STATS));
+         X(k, nP+1:end) = [local_allStats(p, Bset, n, t, numel(STATS)), ...
+                           local_detStats(p, n, t, numel(DET))];
       end
    end
 end
@@ -527,11 +601,28 @@ function rt = local_trialWithinLength(kpiFile, PUB, minN)
 end
 
 function v = local_allStats(p, Bset, n, t, nStat)
+% designMetricScore is left alone and esLoad is called beside it: changing
+% that function's return arity would reach every other caller, and the five
+% values it returns must stay in slots 0..4 for the existing columns to keep
+% their meaning.
    nB = numel(Bset); v = nan(1, nStat*nB);
    for b = 1:nB
       [oT, mx, mm, cv, gi] = designMetricScore(p, Bset(b), n, t);
       v(0*nB+b) = oT; v(1*nB+b) = mx; v(2*nB+b) = mm; v(3*nB+b) = cv; v(4*nB+b) = gi;
+      v(5*nB+b) = calc_esload_invperm(p, Bset(b), n);
    end
+end
+
+function v = local_detStats(p, n, t, nDet)
+% The quantities that take no burst length. One column each, in the order of
+% DET above; the order is what ties them to their names, so a change here
+% must be made there as well.
+   v = nan(1, nDet);
+   v(1) = calc_bguar_invperm(p, n, t);
+   v(2) = calc_dispersion_invperm(p);
+   v(3) = calc_snew_invperm(p);
+   v(4) = calc_srandom_spread_invperm(p);
+   v(5) = calc_adjdispersion_invperm(p);
 end
 
 function r = local_withinLength(x, y, lens)

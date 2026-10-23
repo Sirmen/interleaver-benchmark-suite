@@ -1,6 +1,13 @@
 # MATLAB
 *.asv
 *.m~
+# Timestamped working backups (<name>.YYYYMMDD-HHMM.bak). They are made
+# in the working tree beside each edit; a copy of one inside the release
+# is an accident, and an accident that ships is indistinguishable from a
+# second, older implementation of the same file.
+*.bak
+# audit_dependencies writes this; it is a report, not a source
+dependency_audit.txt
 *.mex*
 slprj/
 # campaign output: archived on Zenodo, not in git
@@ -16,10 +23,8 @@ figures/
 Thumbs.db
 desktop.ini
 
-# The divisor table is 235 MB: over GitHub's 100 MB per-file limit, and a Git LFS
-# pointer would be archived by Zenodo instead of the file itself. It ships with the
-# campaign data archive; setup_paths finds it wherever you put it.
+# The divisor table is 235 MB: over GitHub's per-file limit. It is NOT required
+# - PrimeFactorLoader runs without it and says which methods then compute their
+# own values - and it is archived with the campaign data record, where
+# DATA_README lists it. Drop it in tables/ to use the cache instead.
 tables/factors.mat
-data/
-figures/
-audit_dependencies.m

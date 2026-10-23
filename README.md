@@ -52,13 +52,27 @@ separately on Zenodo, because they are too large for git:
 ```
 harness/        simulation harness: configuration, grid, noise generation, sweep driver
 interleavers/   one folder per interleaver family (int_S, int_arp, int_drp, ...)
-metrics/        metric implementations (defined in Section VI of the paper)
+metrics/        metric implementations (defined in Section 6 of the paper)
 tables/         precomputed permutation and factor tables
 health/         campaign health checks H0-H6 and their self-test (Appendix B)
 analysis/       scripts that produce the tables and figures of the paper
 setup_paths.m   adds everything above to the MATLAB path
 reproduce_paper.m
 ```
+
+Three optional Python scripts re-derive single claims without MATLAB, so that
+a helper shared with the harness cannot make a wrong rule look right:
+`harness/int_utils/verify_c5_threshold.py` recomputes Table 8's association,
+pass and IQR columns from the raw campaign files and then sweeps the C5
+threshold, reporting every value at which a verdict would change;
+`harness/int_utils/verify_table13_averaging.py` recomputes Table 13's
+per-trial columns to test the averaging rule and scope filter its caption
+states; and `interleavers/int_arp/verify_arp_search.py` checks every row of
+`ARP_SEARCH_RESULTS.txt` by brute force over all index pairs, using none of
+the residue-class shortcut that makes `arp_derived_search.c` feasible, which
+covers the long lengths `verify_arp_table` cannot reach in MATLAB. They need
+Python 3 with h5py and NumPy, SciPy for the first, and a compiled
+`arp_derived_search` for the third. Nothing in the suite depends on them.
 
 ## Reproducing the paper from the archived data
 
@@ -73,10 +87,10 @@ reproduce_paper(dataDir)
 0. `check_path_shadowing`, which stops if any file of this release is shadowed by
    a copy elsewhere on your path, or appears twice inside the release. A number
    nobody can attribute to a specific file is not reproducible;
-1. the noise-fidelity check (Section VII-C);
-2. the kappa sensitivity (Section VIII-G);
-3. the metric scorecard (Table VIII);
-4. the structural screen (Table V);
+1. the noise-fidelity check (Section 7.3);
+2. the kappa sensitivity (Section 8.7);
+3. the metric scorecard (Table 8);
+4. the structural screen (Table 5);
 5. the seven figures.
 
 It writes the figures to `./figures` as PDF, EMF (on Windows) and 600 dpi PNG.
@@ -95,7 +109,7 @@ the loaders cache by directory path.
 
 ## Evaluating an interleaver the paper does not contain
 
-Follow Section X of the paper:
+Follow Section 10 of the paper:
 
 1. Screen the method structurally with `screen_methods`.
 2. Record the provenance of every parameter.
@@ -105,14 +119,14 @@ Follow Section X of the paper:
 
 ## Parameter provenance
 
-Every method's structure source and parameter source are listed in Table I of
+Every method's structure source and parameter source are listed in Table 1 of
 the paper and in the header of its implementation. Tier 2 methods (parameters
 derived by a declared rule) are reported separately from Tier 1 (canonical,
 parameter-free) and Tier 3 (published parameters). ARP runs only at the eight
 IEEE 802.16 block sizes where its parameters are published, and returns an
 error elsewhere by design. Its table is read from IEEE Std 802.16-2017,
 clause 8.4.9.2.3.2; `verify_arp_table` re-checks every published row and
-reproduces the audit counts of Section III-C.
+reproduces the audit counts of Section 3.3.
 
 ## License
 

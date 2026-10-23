@@ -34,9 +34,20 @@ function [vectorInterleaved, permutation, Nsc, Nsym, erM] = ...
 %
 %       shift(s) = mod(s * depth, Nsym)
 %
-% a subcarrier-dependent time delay - the same idea as the DVB-T2 time
-% interleaver's rotating delay, expressed as a closed-form block permutation
-% so the frame stays self-contained (no flush, BE unaffected).
+% a subcarrier-dependent time delay, expressed as a closed-form block
+% permutation so the frame stays self-contained (no flush, BE unaffected).
+%
+% THIS DELAY RULE IS THIS BENCHMARK'S, NOT DVB-T2'S. An earlier version of
+% this header said it was "the same idea as the DVB-T2 time interleaver's
+% rotating delay". It is not. ETSI TS 102 755 clause 6.5.3 states "The TI
+% shall be a row-column block interleaver": FEC-blocks are written into the
+% TI memory column-wise and read out row-wise, and there is no rotating delay
+% anywhere in the clause. The standard is cited here for what it does say -
+% that the time and frequency axes of the OFDM frame are interleaved by two
+% separate operations, clauses 6.5 and 8.5 - which is why this method and the
+% frequency interleavers are separate rows in the comparison. The cyclic
+% delay below is a declared choice of the benchmark and is labelled BD in
+% Table I on exactly that ground.
 %
 %       grid(s, t)  ->  grid(s, mod(t - s*depth, Nsym))
 %

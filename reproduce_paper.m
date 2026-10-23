@@ -21,19 +21,19 @@ function reproduce_paper(dataDir)
    % a copy elsewhere on the path, and no name may appear twice inside it.
    check_path_shadowing(struct('strict', true));
 
-   fprintf('\n##### Section IX-A: realized noise against its label\n');
+   fprintf('\n##### Section 7.3: realized noise against its label\n');
    check_noise_fidelity(dataDir);
 
-   fprintf('\n##### Section VIII-G: sensitivity to kappa\n');
+   fprintf('\n##### Section 8.7: sensitivity to kappa\n');
    check_kappa_sensitivity(dataDir, struct('write', false));
 
-   fprintf('\n##### Table IX: the metric scorecard (in-scope field)\n');
+   fprintf('\n##### Table 8: the metric scorecard (in-scope field)\n');
    S = metric_scorecard(dataDir);
 
-   fprintf('\n##### Section VIII-G: target, field, operating point, leave-one-out\n');
+   fprintf('\n##### Table 9: target, field, operating point, leave-one-out\n');
    validation_supplement(dataDir);
 
-   fprintf('\n##### Table VI: structural screen at N = 1200 and N = 1440\n');
+   fprintf('\n##### Table 5: structural screen at N = 1200 and N = 1440\n');
    screen_methods(dataDir, struct('N', 1200));
    screen_methods(dataDir, struct('N', 1440));
 
