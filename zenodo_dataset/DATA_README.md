@@ -1,9 +1,9 @@
-# Campaign data for "Code-Aware Interleaver Metrics on Burst-Error Channels"
+# Campaign data for "Code-Aware Interleaver Metrics for Burst-Error Channels"
 
 Campaign data for:
 
-> R. T. Sirmen, "Code-Aware Interleaver Metrics on Burst-Error Channels: Reed–Solomon Benchmark
-> Validation and Parameter Provenance," 2026.
+> Refik Tanju Sirmen, "Code-Aware Interleaver Metrics for Burst-Error Channels: Taxonomy and
+> Validation on a Provenance-Governed Benchmark," 2026.
 
 Eight sweeps: four burst regimes (single, multi, Gilbert–Elliott e_B = 1.00, Gilbert–Elliott
 e_B = 0.70) run on each of two length grids (common: 50 lengths; standards: the eight IEEE 802.16
@@ -15,7 +15,7 @@ validation.
 The archive contains every method the paper reports, and no others.
 
 This record: https://doi.org/10.5281/zenodo.23136341
-Code: https://doi.org/10.5281/zenodo.XXXXXXX (GitHub: [URL])
+Code: https://doi.org/10.5281/zenodo.23170142 (GitHub: https://github.com/Sirmen/interleaver-benchmark-suite)
 
 ## Files, per sweep `<regime>_<grid>_<date>_<n>`
 
@@ -23,7 +23,7 @@ Code: https://doi.org/10.5281/zenodo.XXXXXXX (GitHub: [URL])
 |---|---|
 | `KPItableDetailed_*.mat` | one row per (method, length, noise bin, run): CR, BE, RES and its parts, noiseActual, noiseBin, encodedLen, interleavedLen, … (MATLAB table) |
 | `KPItableDetailed_*.csv.gz` | the same rows, as CSV, for use without MATLAB |
-| `correlation_data_*.mat` | per-trial metric values used by the validation (Section VIII) |
+| `correlation_data_*.mat` | per-trial metric values used by the validation (Section 8) |
 | `config_*.mat` | the configuration the sweep ran with (grid, noiseLevels, regime) |
 | `factors.mat` | the precomputed divisor table (235 MB). Optional: the code runs without it and derives what it needs, and `PrimeFactorLoader` names the methods affected. Put it in `tables/` of the software record to use the cache. Too large for the git repository, which is why it is archived here |
 | `params_*`, `paramsInt_*`, `burstConfig_*` | the simulation, interleaver and burst parameters of the sweep |
@@ -38,16 +38,16 @@ request.
 ## Things to know before using the data
 
 - **Gilbert–Elliott sweeps.** The five noise targets do not set the realized density: every bin
-  realizes about 0.22 (paper, Section IX-A). Treat the bins there as replicates at one density.
+  realizes about 0.22 (paper, Section 7.2). Treat the bins there as replicates at one density.
 - **Pairing.** Within a trial, every method sees the same burst mask. Pair on the encoded-length
   and trial columns, never on row order.
 - **In-scope field.** CR_z, BE_z and RES are standardized over the in-scope methods, which is every
   method except freqDeterm and freqRandom: 23 of the 25 on the common grid and 24 of the 26 on the
-  standards grid. Both are present in the files and are out of scope by the screen of Section III-I.
+  standards grid. Both are present in the files and are out of scope by the screen of Section 3.9.
   `KPI_SCOPE.txt` records the standardization as it was applied, and
   `standardization_constants.csv` gives the constants, so the z-columns can be checked without
   recomputing them.
-- **CR is clamped at zero** (paper, Section X-H).
+- **CR is clamped at zero** (paper, Section 9).
 
 ## License
 

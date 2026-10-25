@@ -16,7 +16,7 @@ function export_campaign_csv(dataDir, outDir, opts)
 %
 % METHODS THE PAPER DOES NOT REPORT
 % ===========================================================================
-% A campaign folder can hold rows for methods outside Table I, and uploading a
+% A campaign folder can hold rows for methods outside Table 1, and uploading a
 % file that still holds them publishes them. Run audit_methods first, pass
 % every such name in opts.dropMethods, and this function refuses to write
 % anything while a name it was not told about is still in the tables.
@@ -53,7 +53,7 @@ function export_campaign_csv(dataDir, outDir, opts)
    missed = setdiff(setdiff(seen, expected), drop);
    if ~isempty(missed) && ~opts.force
       error('export_campaign_csv:unreported', ...
-            ['These are in the tables, are not in Table I and are not in\n' ...
+            ['These are in the tables, are not in Table 1 and are not in\n' ...
              'dropMethods:\n   %s\n' ...
              'Add them, or pass opts.force = true if they are meant to be public.'], ...
             strjoin(cellstr(missed'), ', '));

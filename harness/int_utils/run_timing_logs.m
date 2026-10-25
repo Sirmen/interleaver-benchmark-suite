@@ -1,4 +1,4 @@
-%RUN_TIMING_LOGS  Construction cost for Section IX-D, with a saved log.
+%RUN_TIMING_LOGS  Construction cost for Section 9, with a saved log.
 %
 % Timing only. Everything else in run_provenance_logs.m (burst structure, noise
 % fidelity, clean region, permutation reach) completed in the run of 29 Sep and
@@ -19,7 +19,7 @@
 %
 % WHAT THIS RUNS
 %   1. closed-form methods, N = 10^3 to 10^5 (10 log-spaced lengths) - the
-%      exponents quoted in Section IX-D
+%      exponents quoted in Section 9
 %   2. every method except srandom, on 12 lengths of the evaluation grid - the
 %      only place a search cost (drp) resolves
 %

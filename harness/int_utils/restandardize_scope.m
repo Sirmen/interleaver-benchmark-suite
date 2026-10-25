@@ -7,7 +7,7 @@ function report = restandardize_scope(dataDir, opts)
 %
 % calcKPIs_engine standardizes CR and BE over every row of a sweep. The paper
 % standardizes on the in-scope methods only and scores the out-of-scope ones
-% against that scale (Sections III-I and X-H). rebuild_kpis does this, but it
+% against that scale (Sections 3.9 and 9). rebuild_kpis does this, but it
 % also rewrites and backs up the results_*.mat files, which are 1.4-11 GB each
 % in this campaign; that needs about as much free disk again as the campaign.
 % This function touches only what the analysis reads:

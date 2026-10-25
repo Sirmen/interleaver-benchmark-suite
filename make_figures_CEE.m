@@ -17,14 +17,7 @@ function make_figures_CEE(dataDir, outDir)
 % and stem where the others take outDir, and its save flag defaults to false.
 % Figures 4 and 5 read the scorecard, so it is computed once and passed to both.
 
-   % DEFAULTS. Both used to be absolute paths on one machine, and the first
-   % of them named the WRONG CAMPAIGN: C:\TS_data\S-Int\results is the v1
-   % run, while every number in the paper comes from results_v2. That folder
-   % no longer exists, so the call errored instead of drawing the manuscript's
-   % figures from the superseded campaign without saying so - which is what
-   % would have happened while it did exist.
-   %
-   % The convention is reproduce_paper's: locate the data relative to this
+   % DEFAULTS. The convention is reproduce_paper's: locate the data relative to this
    % file, where the Zenodo dataset is unzipped, and write beside the working
    % directory. No drive letters, which is also what check_hardcoded_paths
    % exists to enforce.

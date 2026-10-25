@@ -20,7 +20,7 @@ function K = check_kappa_sensitivity(dataDir, opts)
 %   1. kappa per row, read from the row itself:
 %         kappa = noiseActual * interleavedLen / (encodedLen * target)
 %      (noiseActual * interleavedLen is the corrupted count E; Lemma 1.)
-%   2. checks RES = w1*CR_z + w2*BE_z on the stored rows (Lemma 4).
+%   2. checks RES = w1*CR_z + w2*BE_z on the stored rows (equation (4)).
 %   3. RECOVERS how the harness standardized CR - over which rows, in which
 %      groups, with which normalization - by testing candidates against the
 %      stored CR_z, and reports the reproduction error. Nothing is assumed.
@@ -61,7 +61,7 @@ function K = check_kappa_sensitivity(dataDir, opts)
    % invisible from here. Rather than copy a weight - two copies is how two
    % halves of a sum come to disagree - each sweep's weights are fitted from
    % its own stored RES, CR_z and BE_z, and the residual of that fit IS the
-   % Lemma 4 check. The manuscript states (0.5, 0.5).
+   % equation (4) check. The manuscript states (0.5, 0.5).
    d = dir(fullfile(dataDir, 'KPItableDetailed_*.mat'));
    if isempty(d), error('check_kappa_sensitivity: no KPItableDetailed_*.mat in %s', dataDir); end
    outDir = fullfile(dataDir, 'kappa_free');
@@ -100,7 +100,7 @@ function K = check_kappa_sensitivity(dataDir, opts)
       ub = unique(bin(okb)).'; kb = nan(size(ub));
       for k = 1:numel(ub), kb(k) = mean(kap(bin == ub(k) & ilen == len), 'omitnan'); end
 
-      % --- 2. Lemma 4 on the stored rows ----------------------------------
+      % --- 2. equation (4) on the stored rows -----------------------------
       fin = isfinite(RES) & isfinite(CRz) & isfinite(BEz);
       w = ([CRz(fin) BEz(fin)] \ RES(fin)).';
       l4 = max(abs(RES(fin) - (w(1) * CRz(fin) + w(2) * BEz(fin))));
@@ -141,7 +141,7 @@ function K = check_kappa_sensitivity(dataDir, opts)
       end
 
       fprintf('%-30s  kappa by bin: %s\n', tag, sprintf('%.3f ', kb));
-      fprintf('      weights fitted: w = [%.6f %.6f]; Lemma 4 residual on stored rows %.2e\n', w(1), w(2), l4);
+      fprintf('      weights fitted: w = [%.6f %.6f]; equation (4) residual on stored rows %.2e\n', w(1), w(2), l4);
       fprintf('      CR_z reproduced as: groups = %s, population = %s, max error %.2e%s\n', ...
               scheme, pop, zErr, local_flag(zErr));
       fprintf('      largest shift in a method''s mean RES: %.4f\n', max(abs(mn - mo)));

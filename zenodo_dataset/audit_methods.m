@@ -4,7 +4,7 @@ function names = audit_methods(dataDir)
 %   audit_methods(getenv('SINT_RESULTS'))
 %
 % Run this before building the Zenodo package. The archive must carry the
-% methods Table I lists and no others; a .mat uploaded unfiltered can carry
+% methods Table 1 lists and no others; a .mat uploaded unfiltered can carry
 % more than that, and an upload cannot be taken back afterwards.
 
    if nargin < 1 || isempty(dataDir), dataDir = getenv('SINT_RESULTS'); end
@@ -46,7 +46,7 @@ function names = audit_methods(dataDir)
       fprintf(2, '    Pass them to export_campaign_csv as opts.dropMethods.\n');
       fprintf(2, '    Nothing may be uploaded until these rows are gone.\n');
    else
-      fprintf('\n   every name in these files is one Table I lists\n');
+      fprintf('\n   every name in these files is one Table 1 lists\n');
    end
 end
 

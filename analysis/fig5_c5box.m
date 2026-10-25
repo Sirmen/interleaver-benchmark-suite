@@ -14,7 +14,7 @@ function out = fig5_c5box(S, opts)
 % all near 0.40, and only the second may be quoted as a single figure.
 %
 % So the figure is the distribution itself, one box per metric, and the IQR
-% of each box IS the C5 column of Table IX. Nothing is summarised twice: the
+% of each box IS the C5 column of Table 8. Nothing is summarised twice: the
 % table gives the number, the figure gives the shape the number came from.
 %
 % WHICH METRICS, AND WHY NOT THE STRONGEST
@@ -24,7 +24,7 @@ function out = fig5_c5box(S, opts)
 % so the twelve strongest were giniLoad and meanMaxCW at five different B
 % each - five boxes of the same metric, and half the suite missing. A figure
 % of the suite has to be the suite: one entry per metric, each design
-% statistic at the B Table X names for it, in the order Table IX reports.
+% statistic at the B Table 10 names for it, in the order Table 8 reports.
 %
 % WHY THE AXIS CARRIES |rho| AND THE SIGN IS A MARK
 % ===========================================================================
@@ -79,12 +79,12 @@ function out = fig5_c5box(S, opts)
    names = S.metrics;
    n = opts.n;
 
-   % The suite of Table X, each design statistic at its own burst length,
-   % ordered as Table IX orders them. The display labels are the paper's
+   % The suite of Table 10, each design statistic at its own burst length,
+   % ordered as Table 8 orders them. The display labels are the paper's
    % symbols, so the figure and the table name the same things.
    %
-   % v98: the DISCARD BLOCK at the end of the list is now the whole set of
-   % code-agnostic quantities that fail C2, ordered by |rho| as Table VIII
+   % The DISCARD BLOCK at the end of the list is the whole set of
+   % code-agnostic quantities that fail C2, ordered by |rho| as Table 8
    % orders them: APSR, S_new, adj_gamma, adj_CV, S_ach, gamma. They are drawn
    % rather than only tabulated because this figure's asterisk marks a sign
    % reversal across lengths, and that is what distinguishes gamma and S_ach -
@@ -96,22 +96,22 @@ function out = fig5_c5box(S, opts)
    % the continuation the '...' above it opened, so its newline becomes a row
    % separator; fig2_taxonomy.m carries the same warning after the same bug.
    %
-   % v98: esLoad and B_guar are retained metrics of Table X and are drawn with
+   % esLoad and B_guar are retained metrics of Table 10 and are drawn with
    % the rest. B_guar carries no _B suffix because it is not parameterized by
    % a burst length, so its key is the bare name the scorecard gives it.
    %
-   % v98: PSR prints as APSR. The LEFT column is the field name in
+   % PSR prints as APSR. The LEFT column is the field name in
    % correlation_data_*.mat and does not change; only the printed label
    % does. Renaming the left column would silently drop the metric from
    % the figure, since the lookup would find no such field.
    if isempty(opts.metrics)
       want = { ...
-         sprintf('giniLoad_B%d',  12*n), 'giniLoad (12n)'  ; ...   % v26: same B as Table IX
-         sprintf('esLoad_B%d',    12*n), 'esLoad (12n)'    ; ...   % v98: selected B, as giniLoad
+         sprintf('giniLoad_B%d',  12*n), 'giniLoad (12n)'  ; ...   % same B as Table 8
+         sprintf('esLoad_B%d',    12*n), 'esLoad (12n)'    ; ...   % selected B, as giniLoad
          sprintf('meanMaxCW_B%d', 24*n), 'meanMaxCW (24n)' ; ...
          sprintf('maxErrCW_B%d',  24*n), 'maxErrCW (24n)'  ; ...
          sprintf('overT_B%d',     12*n), 'overT (12n)'     ; ...
-         'B_guar',                       'B_{guar}'        ; ...   % v98: no B to select
+         'B_guar',                       'B_{guar}'        ; ...   % no B to select
          sprintf('cvLoad_B%d',    24*n), 'cvLoad (24n)'    ; ...
          'delta_G',   '\Delta_G'   ; ...
          'eta_ES',    '\eta_{ES}'  ; ...
@@ -185,7 +185,7 @@ function out = fig5_c5box(S, opts)
    set(ax, 'Units', 'normalized');
    hold(ax, 'on');
 
-   % Shading follows the C5 statistic of Table IX: the interquartile range of
+   % Shading follows the C5 statistic of Table 8: the interquartile range of
    % the per-length correlations within each condition, averaged over the
    % conditions. The boxes pool all conditions, so their width also carries
    % the differences between conditions and can exceed the threshold for a
@@ -259,7 +259,7 @@ function out = fig5_c5box(S, opts)
               out(i).n, out(i).median, out(i).iqr, out(i).min, out(i).max, rule);
    end
    fprintf(['  A shaded row is a metric whose spread exceeds the threshold, so its\n' ...
-            '  single number in Table X is a summary of disagreement.\n\n']);
+            '  single number in Table 10 is a summary of disagreement.\n\n']);
 end
 
 % -------------------------------------------------------------------------
@@ -271,7 +271,7 @@ end
 function q = quantile_local(v, p)
 % MATLAB's prctile definition, written out.
 %
-% The definition matters and is not a detail. Table IX's C5 column is iqr(v),
+% The definition matters and is not a detail. Table 8's C5 column is iqr(v),
 % which is prctile(v,75) - prctile(v,25); prctile places the sorted sample at
 % the midpoints (i-0.5)/n and interpolates linearly between them, clamping
 % outside. The other common convention places them at (i-1)/(n-1) and returns

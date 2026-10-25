@@ -31,12 +31,12 @@ function burstConfig = configure_burst_parameters(config, interleavedSize, noise
     if burstConfig.geMode
         % The chain decides burst count and lengths; we only fix the target
         % rate and the acceptance band the realised count must fall into.
-        % ACCEPTANCE BAND (v26). The campaign of the paper accepted a Gilbert-
+        % ACCEPTANCE BAND. The campaign of the paper accepted a Gilbert-
         % Elliott mask as soon as its error count fell anywhere in the range of
         % the whole noise grid, [noisyRateMin, noisyRateMax]. With about three
         % bursts per frame the count is very variable, so the accepted draws
         % spread over that range in every bin and all five bins realized a mean
-        % density of about 0.22 (Section IX-A of the paper). The default is now
+        % density of about 0.22 (Section 7.2 of the paper). The default is now
         % a band of half a bin width around the bin's own target. Set
         % config.ge_bandMode = 'grid' to reproduce the archived campaign.
         bandMode = 'target';

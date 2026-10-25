@@ -2,8 +2,9 @@
 
 Code for
 
-> R. T. Sirmen, "Reproducibility in Interleaver Benchmarking: A Validated
-> Evaluation Suite with Metric Taxonomy and Parameter Provenance," arXiv:XXXX.XXXXX, 2026.
+> Refik Tanju Sirmen, "Code-Aware Interleaver Metrics for Burst-Error Channels:
+> Taxonomy and Validation on a Provenance-Governed Benchmark,"
+> arXiv:XXXX.XXXXX, 2026.
 
 This package regenerates every permutation, metric value, table and figure in
 the paper. It holds four things:
@@ -25,8 +26,11 @@ separately on Zenodo, because they are too large for git:
 
 ## Requirements
 
-- MATLAB R2020a or later, with the Communications Toolbox, the Statistics and Machine
-  Learning Toolbox and the Signal Processing Toolbox.
+- MATLAB with the Communications Toolbox, the Statistics and Machine Learning
+  Toolbox and the Signal Processing Toolbox. The campaign and every figure were
+  produced on MATLAB 25.2; no earlier release has been tested. `exportgraphics`,
+  which the figure export uses, needs R2020a or later, so that is a lower bound
+  on the figure path rather than a tested one.
   MATLAB's dependency resolver also names the Symbolic Math and Mapping Toolboxes,
   because `divisors` and `distance` exist in both. Neither is needed. Three names
   in this repository share a name with an installed toolbox — `divisors`
@@ -35,8 +39,6 @@ separately on Zenodo, because they are too large for git:
   the copies here are the ones the campaign ran with. `setup_paths` puts the
   repository in front of the rest of the path so they keep winning, and
   `check_path_shadowing` refuses to run if any of them resolves elsewhere.
-  R2020a is the first release with `exportgraphics`; on older releases the
-  figures fall back to `print`.
 - About 530 MB of free disk space for the campaign data (the Zenodo archive is 79 files, 529 MB).
 - `factors.mat`, the precomputed divisor table, comes with the campaign data archive rather
   than with this repository: at 235 MB it exceeds GitHub's per-file limit. Put it in `tables/`
@@ -53,9 +55,13 @@ separately on Zenodo, because they are too large for git:
 harness/        simulation harness: configuration, grid, noise generation, sweep driver
 interleavers/   one folder per interleaver family (int_S, int_arp, int_drp, ...)
 metrics/        metric implementations (defined in Section 6 of the paper)
+common/         shared numeric helpers and the Reed-Solomon codec wrappers
 tables/         precomputed permutation and factor tables
 health/         campaign health checks H0-H6 and their self-test (Appendix B)
 analysis/       scripts that produce the tables and figures of the paper
+plotting/       the campaign's own diagnostic plots, not the paper's figures
+zenodo_dataset/ scripts that build and audit the archived data package
+figures/        where the figure scripts write; regenerated, not shipped
 setup_paths.m   adds everything above to the MATLAB path
 reproduce_paper.m
 ```
@@ -100,9 +106,15 @@ The bootstrap is seeded, so the confidence intervals reproduce to the last digit
 
 ```matlab
 setup_paths
-verify_setup(dataDir)          % file versions, grid, tables, permutation integrity
-run_simulations_sci            % grid and burst regime chosen in configure_simulation
+verify_setup(find_table_dir())  % file versions, grid, table coverage, permutations
+run_simulations_sci             % grid and burst regime chosen in configure_simulation
 ```
+
+`verify_setup` wants the TABLE directory — the one holding
+`table_factors_precomputed.mat`, which in this repository is `tables/` — and
+not the results directory. The two look alike and are not, which is what
+`find_table_dir` exists to settle; passing a results folder makes the table
+coverage check fail on a tree that is in fact complete.
 
 After regenerating any permutation table, call `clearHarnessCaches`: four of
 the loaders cache by directory path.

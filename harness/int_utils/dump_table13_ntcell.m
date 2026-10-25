@@ -1,15 +1,15 @@
 function T = dump_table13_ntcell(dataPath, tableDir, opts)
-%DUMP_TABLE13_NTCELL  Table XIII's a priori (n,t) column, with its own check.
+%DUMP_TABLE13_NTCELL  Table 13's a priori (n,t) column, with its own check.
 %
 %   T = dump_table13_ntcell('<resultsDir>', '<tableDir>')
 %
 % WHY ONLY ONE COLUMN
 % ---------------------------------------------------------------------------
-% v98 makes B_guar the primary metric of the a priori, (n,t)-aware cell, so
-% Table XIII's column for that cell changes from overT to B_guar. Every other
-% column of that table is unchanged, and metric_scorecard returns correlations
-% rather than per-method values, so there is nothing to read out of it: the
-% column has to be recomputed. Recomputing the whole table instead would mean
+% B_guar is the primary metric of the a priori, (n,t)-aware cell, so Table
+% 13's column for that cell is B_guar and not overT. That one column is all
+% this script produces, and metric_scorecard returns correlations rather than
+% per-method values, so there is nothing to read out of it: the column has to
+% be recomputed. Recomputing the whole table instead would mean
 % re-deriving the scope filter, the method exclusions and the averaging, which
 % is four more chances to produce a table that disagrees with the published one
 % in a way nobody notices.
@@ -19,7 +19,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
 % The averaging has to be the SAME averaging the published column used, and
 % the only way to know that is to reproduce a column that already exists. So
 % overT is recomputed here beside B_guar, by the same path, and printed next
-% to the values Table XIII prints today:
+% to the values Table 13 prints today:
 %
 %   block 0.776   matrix 0.996   snake 0.976   helical 0.998
 %   helicalScan 0.999   diagonal 1.000   spiral 1.000
@@ -31,7 +31,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
 %
 % THE AVERAGING IS NOT A HYPOTHESIS ANY MORE
 % ---------------------------------------------------------------------------
-% Table XIII's own caption states it: "Cell means over noise bins and runs at
+% Table 13's own caption states it: "Cell means over noise bins and runs at
 % the 44 common-grid lengths with N > 24n, averaged over the four burst
 % regimes; the last column is the same on the standards grid (5 lengths) ...
 % giniLoad and overT at B = 12n."
@@ -47,11 +47,11 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
 %   2. The nine left-hand columns are COMMON GRID ONLY. The standards grid
 %      enters the last column and nowhere else. Pooling all eight conditions
 %      mixes two grids with different length sets into one mean.
-%   3. B is 12n for both permutation columns. Table XIII has no 8n column;
-%      8n belongs to Table X, which quotes a range.
+%   3. B is 12n for both permutation columns. Table 13 has no 8n column;
+%      8n belongs to Table 10, which quotes a range.
 %
 % With the floor at 360 and the common grid alone, all six per-trial columns
-% of Table XIII reproduce for all 23 in-scope methods - eta_sep, delta_G,
+% of Table 13 reproduce for all 23 in-scope methods - eta_sep, delta_G,
 % S_ECC, CR, BE and RES - to the last printed digit: worst deviation 0.0005,
 % and 0.0049 on S_ECC, which is printed to two decimals. The standards-grid
 % RES column reproduces too. That is 144 published values from one averaging
@@ -76,13 +76,13 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
    FECn = local_opt(opts, 'FECn', 15);
    FECt = local_opt(opts, 'FECt', 3);
    Bset = local_opt(opts, 'Bset', FECn * [1 2 4 8 12 16 24]);
-   BoverT = local_opt(opts, 'BoverT', 12 * FECn);     % Table XIII's overT column
+   BoverT = local_opt(opts, 'BoverT', 12 * FECn);     % Table 13's overT column
    % B IS 12n, AND THE 8n COLUMN IS KEPT ONLY AS A WITNESS.
    % validation_supplement's list carries giniLoad twice,
    %   DES = {'giniLoad',12; 'meanMaxCW',24; 'maxErrCW',24; 'overT',12;
    %          'cvLoad',24; 'giniLoad',8}
-   % and Table X writes the cell as "giniLoad (B = 8n-12n)", a range. That is
-   % Table X. Table XIII's caption names one value, 12n, so the VERDICT below
+   % and Table 10 writes the cell as "giniLoad (B = 8n-12n)", a range. That is
+   % Table 10. Table 13's caption names one value, 12n, so the VERDICT below
    % is taken at 12n alone. The 8n column is still printed, because when the
    % first version of this file missed the published column by 0.002 to 0.010
    % the two B's were the leading suspect, and printing both is what shows
@@ -93,7 +93,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
 
    % THE SCOPE FLOOR IS THE CAPTION'S, NOT THE SWEEP'S.
    % minN = max(Bset) was wrong: it is 12n, and it is a property of the B
-   % sweep, which has nothing to do with which lengths Table XIII averages.
+   % sweep, which has nothing to do with which lengths Table 13 averages.
    % The caption says N > 24n, and 24n is what reproduces the 44/5 counts and
    % all six per-trial columns. Do not tie this to Bset again.
    minN    = local_opt(opts, 'minN', 24 * FECn);
@@ -103,7 +103,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
    dropMethods = local_opt(opts, 'dropMethods', {'freqDeterm', 'freqRandom'});
    ENSEMBLE = {'random', 'freqRandom'};
 
-   % Published Table XIII values, for the three columns this can check.
+   % Published Table 13 values, for the three columns this can check.
    %   overT     from the permutation, at B = 12n
    %   giniLoad  from the permutation, at B = 12n
    %   eta_sep   from correlation_data, not from the permutation at all
@@ -120,7 +120,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
       'spiral',      [1.000 0.691 0.074], 'latinSquare', [0.733 0.429 0.100], ...
       'goldenRP',    [0.441 0.334 0.683], 'srandom',     [0.912 0.345 0.676]);
 
-   % Table XIII's eta_sep column for EVERY in-scope method, not just the ten
+   % Table 13's eta_sep column for EVERY in-scope method, not just the ten
    % that have a published overT here. eta_sep is the anchor: it comes from
    % correlation_data, so it tests the averaging and nothing else, and a
    % 23-method anchor leaves no room for an averaging that happens to fit ten
@@ -164,7 +164,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
    % Two smaller differences from that path mattered too: the filter is
    % STRICTLY greater than minN, and the only exclusion is OUTS. There is no
    % standardizedOn restriction here - out-of-scope methods are marked rather
-   % than dropped, and Table XIII chooses its rows separately.
+   % than dropped, and Table 13 chooses its rows separately.
    %
    % ONE POOLING, AND IT IS THE CAPTION'S.
    %
@@ -184,7 +184,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
    keepFile = ~cellfun(@isempty, strfind({d.name}, ['_' gridTag '_']));  %#ok<STRCLFH>
    if ~any(keepFile)
       error(['dump_table13_ntcell: no correlation_data file in %s carries the ' ...
-             'grid tag "_%s_". Table XIII''s left-hand columns are that grid ' ...
+             'grid tag "_%s_". Table 13''s left-hand columns are that grid ' ...
              'alone, so there is nothing to average.'], dataPath, gridTag);
    end
    nSkipped = sum(~keepFile);
@@ -215,7 +215,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
       % silently, so the condition is tested rather than trusted.
       uL = unique(len(keep));
       if numel(uL) ~= nLenExp
-         fprintf(2, ['  %s: %d lengths above %d, expected %d. Table XIII''s\n' ...
+         fprintf(2, ['  %s: %d lengths above %d, expected %d. Table 13''s\n' ...
                      '    caption names %d; this campaign is not the published grid.\n'], ...
                  d(i).name, numel(uL), minN, nLenExp, nLenExp);
       end
@@ -303,7 +303,7 @@ function T = dump_table13_ntcell(dataPath, tableDir, opts)
    if esN == 0
       fprintf(2, '\n  ANCHOR NOT TESTED: no in-scope method matched ESREF.\n\n');
    elseif isempty(esBad)
-      fprintf(['\n  ANCHOR HOLDS. eta_sep reproduces Table XIII for all %d in-scope\n' ...
+      fprintf(['\n  ANCHOR HOLDS. eta_sep reproduces Table 13 for all %d in-scope\n' ...
                '  methods within %.3f. The averaging in this file is the published\n' ...
                '  one, and the permutation columns below are on that footing.\n\n'], ...
               esN, TOL);

@@ -71,7 +71,7 @@ function S = metric_scorecard(dataPath, opts)
    % the held-out B selection below does not apply to them. B_guar returns a
    % burst length rather than consuming one; the other four are functions of
    % the permutation alone. Scored here rather than only in
-   % design_metric_extension so that the scorecard, Tables IX, XI and XIII
+   % design_metric_extension so that the scorecard, Tables 8, 11 and 13
    % and Figures 4 and 5 see the same columns.
    DET = {'B_guar','dispersion','Snew','S_ach','adjDispersion'};
 
@@ -153,7 +153,7 @@ function S = metric_scorecard(dataPath, opts)
    % moving by up to 0.2 with nothing on screen to say why. metric_crosscorr
    % already dropped these two by default, so the two scripts disagreed about
    % what "the field" meant. Pass dropMethods {} for the full field, which is
-   % the ablation Section VIII-G reports.
+   % the ablation Section 8.7 reports.
    dropMethods = local_opt(opts, 'dropMethods', {'freqDeterm', 'freqRandom'});
    if isfield(opts, 'dropMethods') && isempty(opts.dropMethods), dropMethods = {}; end
    if ischar(dropMethods), dropMethods = {dropMethods}; end
@@ -161,7 +161,7 @@ function S = metric_scorecard(dataPath, opts)
       fprintf('  FIELD: in scope, %s excluded from every correlation\n', strjoin(dropMethods, ', '));
    else
       fprintf(2, '  FIELD: FULL, every method included. These are the ablation\n');
-      fprintf(2, '  numbers of Section VIII-G, not the numbers in the tables.\n');
+      fprintf(2, '  numbers of Section 8.7, not the numbers in the tables.\n');
    end
 
    gridFilter = local_opt(opts, 'gridFilter', '');

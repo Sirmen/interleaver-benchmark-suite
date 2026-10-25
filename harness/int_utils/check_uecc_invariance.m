@@ -130,7 +130,7 @@ function out = check_uecc_invariance(dataPath)
          fprintf('            see the permutation, in this regime, under the paired design.\n');
       else
          fprintf(2, '         => NOT invariant: U_ECC does vary across methods within a trial.\n');
-         fprintf(2, '            The argument in Section VIII-G is wrong and must be withdrawn.\n');
+         fprintf(2, '            The argument in Section 8.7 is wrong and must be withdrawn.\n');
       end
       fprintf('     T2  distinct U_ECC values across methods within a trial: %d..%d (predicted 2)\n', ...
               min(nd), max(nd));

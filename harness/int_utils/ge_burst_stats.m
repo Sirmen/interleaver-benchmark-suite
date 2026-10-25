@@ -4,7 +4,7 @@ function R = ge_burst_stats(opts)
 %   R = ge_burst_stats                                   % both GE regimes, common grid
 %   R = ge_burst_stats(struct('grid', 'standards'))
 %
-% Section VII-B of the manuscript reports, for the common grid, the mean number
+% Section 7.2 of the manuscript reports, for the common grid, the mean number
 % of bursts per frame, their mean length, the longest burst, and the share of
 % masks forced into the acceptance band. The per-trial geInfo is not stored in
 % the results files, so these statistics are regenerated here by drawing masks

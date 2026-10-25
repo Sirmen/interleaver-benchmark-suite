@@ -45,9 +45,7 @@ function [vectorInterleaved, permutation, M, D, erM] = ...
 % delay increment is one unit of M and there is no free parameter to search
 % over, so searching it gave this baseline an advantage the published method
 % does not have. local_forneyD returns 1, and the helper is gone from the
-% suite. This paragraph described the search until 2026-10-23, while the
-% code had returned 1 since August - the one direction in which a stale
-% header does real damage, since it claims a tuning that was removed.
+% suite.
 %
 % CONVENTION: vectorInterleaved = vectorIn(permutation)  (gather index).
 %

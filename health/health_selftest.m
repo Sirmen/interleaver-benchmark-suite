@@ -52,7 +52,7 @@ function ok = health_selftest(workDir)
 
       if wantPass
          good = strcmp(H.verdict, 'QUOTABLE');
-         fprintf('  %-15s %-46s verdict %-22s %s\n', tag, what, H.verdict, local_mark(good));
+         fprintf('  %-15s %-46s verdict %-22s %s\n', local_pid(tag), what, H.verdict, local_mark(good));
          if ~good
             fprintf(2, '      the UNCORRUPTED campaign did not pass, so every case below is\n');
             fprintf(2, '      measured against a baseline that is already objecting.\n');
@@ -67,9 +67,9 @@ function ok = health_selftest(workDir)
          end
          good = hit;
          fprintf('  %-15s %-46s %s caught=%d, collateral=%d %s\n', ...
-                 tag, what, want, hit, nOther, local_mark(good));
+                 local_pid(tag), what, local_pid(want), hit, nOther, local_mark(good));
          if ~hit
-            fprintf(2, '      %s DID NOT FAIL on data corrupted specifically for it.\n', want);
+            fprintf(2, '      %s DID NOT FAIL on data corrupted specifically for it.\n', local_pid(want));
             fprintf(2, '      That check cannot be trusted and must not be reported.\n');
          end
       end
@@ -203,6 +203,15 @@ function local_corrupt(dd, tag)
          for i = 1:numel(R), R(i).RES = R(i).RES * 1.05 + 0.01; end
          S.KPItableDetailed = R; save(f, '-struct', 'S');
    end
+end
+
+function id = local_pid(f)
+% The paper's id for a check. The struct field names are B0_conditions,
+% B1_occupancy and so on, and they are health_check's returned interface, so
+% they are not renamed; Appendix B calls the same checks H0-H6, and this is
+% what gets printed. 'clean' and '' pass through.
+   id = f;
+   if ~isempty(id) && id(1) == 'B', id(1) = 'H'; end
 end
 
 function s = local_mark(ok)

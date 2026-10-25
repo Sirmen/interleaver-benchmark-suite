@@ -34,7 +34,8 @@ function [Bguar, kWorst] = calc_bguar_invperm(perm, n, t)
 % It is the classical burst-correction guarantee of Ramsey and Forney, stated
 % for an ARBITRARY permutation rather than for the matrix or delay-line
 % structures the classical results assume. It is a priori and (n,t)-aware, so
-% it falls in the cell the manuscript reports as holding overT alone.
+% it falls in the a priori, (n,t)-aware cell, where the paper reports it as the
+% primary metric beside overT (Table 10).
 %
 % SELF-CHECK THAT FIXES THE CONVENTION
 % ---------------------------------------------------------------------------

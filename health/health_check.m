@@ -324,8 +324,8 @@ function H = local_B5(H, C, tag, cfg)
 % then rewrites these files on the in-scope methods the manuscript declares,
 % and scores the out-of-scope ones against that scale. A check that assumes
 % one of the two conventions reports a definition failure for what is a scope
-% difference - which is what this check did until 2026-10-23, silently, from
-% the day the restandardization was applied.
+% difference, and reports it silently from the day the restandardization is
+% applied.
 %
 % The convention is therefore read off the data instead of assumed:
 %
@@ -651,6 +651,13 @@ function [inv, ok, why] = local_inventory(d, opts)
 end
 
 function local_head(id, name, pass)
+   % Appendix B of the paper names these checks H0-H6 and A1-A4. The ids come
+   % from the struct field names, which are B0_conditions, B1_occupancy and so
+   % on, and those are the function's returned interface - renaming them would
+   % break every caller that reads H.blocking.B5_kpi. So the blocking ids are
+   % mapped to the paper's letter here, at the point where they are printed,
+   % and nowhere else.
+   if ~isempty(id) && id(1) == 'B', id(1) = 'H'; end
    if pass, m = 'PASS'; else, m = 'FAIL'; end
    fprintf('\n    [%s] %-34s %s\n', id, name, m);
 end

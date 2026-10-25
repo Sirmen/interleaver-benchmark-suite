@@ -5,7 +5,7 @@ function R = fig6_resdecomp(dataDir, opts)
 %
 % THE CLAIM
 % ===========================================================================
-% RES = w1*CR_z + w2*BE_z identically (Lemma 4), so a method's mean RES splits
+% RES = w1*CR_z + w2*BE_z identically (equation (4)), so a method's mean RES splits
 % into two additive parts with nothing estimated. The split says why three
 % methods sit at the foot of the composite: about four fifths of their deficit
 % is in the term charging for frame extension, not in the term that measures
@@ -153,7 +153,7 @@ function R = fig6_resdecomp(dataDir, opts)
    ax = axs(1);
    % SYMBOLS, NOT WORDS. 'recovery  w_1CR_z' measured 1.21 in with its
    % marker token, against a panel 1.64 in wide - three quarters of the
-   % panel for a key. The two terms are named in Lemma 4 and glossed in the
+   % panel for a key. The two terms are named in equation (4) and glossed in the
    % caption, so the legend carries the symbols alone and the words go where
    % there is room for them. The entries are about 0.38 in now.
    lg = legend(ax, hb, {'w_1CR_z', 'w_2BE_z'}, ...
@@ -234,7 +234,7 @@ function R = fig6_resdecomp(dataDir, opts)
    % duplicated here: two copies of a weight is how the two halves of a sum
    % come to disagree. The residual below is zero only if the weights the
    % screen used are the ones that built the bars.
-   fprintf('\n  Lemma 4 check: max |RES - (CRterm + BEterm)| = %.3e\n', ...
+   fprintf('\n  equation (4) check: max |RES - (CRterm + BEterm)| = %.3e\n', ...
            max(abs([R.meanRES] - (cr + be))));
    fprintf('  rate share of the deficit, the three lowest:\n');
    for j = 1:min(3, n)
@@ -246,7 +246,7 @@ function R = fig6_resdecomp(dataDir, opts)
    % a manuscript is a rank column that disagrees with the data by one.
    [~, oR] = sort([R.meanRES], 'descend'); rkR = zeros(1, n); rkR(oR) = 1:n;
    [~, oC] = sort(cr, 'descend');          rkC = zeros(1, n); rkC(oC) = 1:n;
-   fprintf('\n  THE REORDERING, for checking the claim in Section IX\n');
+   fprintf('\n  THE REORDERING, for checking the claim in Section 9\n');
    fprintf('  %-15s %9s %9s %9s %7s %7s %7s\n', 'Method', 'mean RES', ...
           'recovery', 'rate', 'rk RES', 'rk rec', 'gained');
    fprintf('  %s\n', repmat('-', 1, 70));

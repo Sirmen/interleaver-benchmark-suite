@@ -16,14 +16,14 @@ function verify_arp_table(mode)
 % This file calls it when it is on the path and says so; otherwise it refuses
 % lengths above 480 rather than appearing to hang.
 %
-% It prints the three counts Section III-C quotes:
+% It prints the three counts Section 3.3 quotes:
 %   1. every published row is a bijection and meets the published constraints;
 %   2. how many of the seventeen rows are degenerate (all effective offsets 0);
 %   3. for an ARP derived from the published constraints alone, at how many
 %      lengths the optimising offsets come out (0,0,0), and how the derived
 %      Smin compares with the published one.
 %
-% Derivation rule, as declared in Section III-C: C = 4 with C | N; P0 the
+% Derivation rule, as declared in Section 3.3: C = 4 with C | N; P0 the
 % coprime of N nearest sqrt(2N); P2 a multiple of 4; P1 and P3 even with
 % P1 = P3 (mod 4); offsets chosen to maximise Berrou's Smin.
 %

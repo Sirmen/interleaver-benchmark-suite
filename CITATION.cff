@@ -3,11 +3,11 @@ message: "If you use this software, please cite the article below and the archiv
 title: "Interleaver Benchmark Suite: parameter provenance, metric taxonomy and validated metrics"
 authors:
   - family-names: Sirmen
-    given-names: "R. Tanju"
+    given-names: "Refik Tanju"
     affiliation: "Piri Reis University, Istanbul, Türkiye"
     orcid: "https://orcid.org/0000-0001-5014-4780"
-version: "1.0.4"
-date-released: "2026-10-23"
+version: "1.0.6"
+date-released: "2026-10-25"                # MUST match the day the v1.0.6 tag is pushed
 license: MIT
 repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
 doi: "10.5281/zenodo.23170142"           # concept DOI; always resolves to the latest version
@@ -26,13 +26,15 @@ preferred-citation:
   title: "Code-Aware Interleaver Metrics for Burst-Error Channels: Taxonomy and Validation on a Provenance-Governed Benchmark"
   authors:
     - family-names: Sirmen
-      given-names: "R. Tanju"
+      given-names: "Refik Tanju"
   year: 2026
-  journal: "arXiv"                                   # TODO: arXiv id, later the journal
+  journal: "arXiv"                       # TODO: replace with the journal on acceptance
+  # TODO: on the arXiv id, uncomment and fill - the DOI form, not the bare id
+  # doi: "10.48550/arXiv.XXXX.XXXXX"
 references:
   - type: data
     title: "Campaign data for the paper"
     doi: "10.5281/zenodo.23136341"
     authors:
       - family-names: Sirmen
-        given-names: "R. Tanju"
+        given-names: "Refik Tanju"

@@ -21,13 +21,26 @@ function [apsr, maxSidelobe] = calc_apsr(perm)
 % arithmetic is unchanged; only its address is.
 %
 % THE FACTOR OF TEN IS A DECLARED CONVENTION, NOT AN ERROR.
-% The peak sidelobe level of sequence design is conventionally reported as
-% 20 log10 of an amplitude ratio. Ten is used here and declared as such in
-% Section 6.3. The two differ by a positive constant, so every rank
-% correlation, every C2 and C5 verdict and every sensitivity result in the
-% paper is identical under either; only the printed decibel value changes.
-% Changing it now would oblige a re-run and a re-archiving of every stored
-% result for no change in any reported conclusion.
+% [41] of the paper, Brest and Boskovic, defines the peak sidelobe level as
+% an integer, PSL = max|C_k|, and reports it in decibels as
+%
+%     NPSL [dB] = 20 log10 (PSL / L)
+%
+% which is NEGATIVE, since PSL <= L, and on which smaller is better. For a
+% +-1 sequence C_0 = L, so that ratio is exactly the r(k) used here. APSR
+% negates and halves it: APSR = -NPSL/2.
+%
+% So the constant between the two is NEGATIVE, not positive, and the two
+% orderings are reverses of each other. That is deliberate - the suite reads
+% larger as better - and it is harmless because Section 8 reports |rho|,
+% which a reversal leaves unchanged.
+%
+% Switching to twenty would make APSR the plain negation of NPSL, which is
+% tidier, and it is still not worth doing: APSR is discarded on C2, so its
+% printed value enters no verdict, every rank statistic is invariant to the
+% factor, and the archived campaign stores this quantity computed with ten.
+% Changing the paper alone would break the correspondence between the paper
+% and the data it cites, which is the thing this release exists to keep.
 %
 % THE FIELD NAME IN THE RESULTS IS STILL 'PSR'.
 % correlation_data_*.mat and the campaign records key this quantity as PSR,

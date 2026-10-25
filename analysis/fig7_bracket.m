@@ -330,7 +330,7 @@ function s = local_verdict(v, vIdent, qs)
 end
 
 function q = local_q(v, p)
-% prctile convention, matching fig5_c5box and Table X.
+% prctile convention, matching fig5_c5box and Table 10.
    v = sort(v(isfinite(v))); n = numel(v); q = nan(size(p));
    if n == 0, return; end
    if n == 1, q(:) = v; return; end

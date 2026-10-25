@@ -1,4 +1,4 @@
-% LE_DEGENERACY_TEST  Lemma 4, checked numerically.
+% LE_DEGENERACY_TEST  Lemma 2, checked numerically.
 %
 % calcLaplacianEnergy builds a graph with an edge between perm(i) and
 % perm(i+1). Because every value occurs exactly once in a permutation, that
@@ -17,7 +17,7 @@
 % equivalent - a test that proves an implementation-independent result should
 % not itself depend on the interpreter.
 
-fprintf('\n=== LE DEGENERACY TEST  (Lemma 4) ===\n');
+fprintf('\n=== LE DEGENERACY TEST  (Lemma 2) ===\n');
 fprintf('%6s %10s %12s %16s %16s %8s\n', ...
         'N', 'distinct', 'spread', 'measured', '(6N-8)/N^2', 'match');
 fprintf('%s\n', repmat('-', 1, 74));
@@ -55,6 +55,6 @@ if allExact
             'and the association reported for it is with the frame length.\n\n']);
 else
    fprintf(2, ['At least one length disagreed with the closed form. Either the\n' ...
-               'implementation on the path is not the one Lemma 4 describes, or\n' ...
+               'implementation on the path is not the one Lemma 2 describes, or\n' ...
                'the lemma is wrong. Resolve before quoting either.\n\n']);
 end

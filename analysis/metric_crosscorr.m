@@ -6,7 +6,7 @@ function X = metric_crosscorr(dataDir, opts)
 %
 % WHY THIS EXISTS
 % ===========================================================================
-% Section VIII-G advances one claim that no surviving artefact supports:
+% Section 8.7 advances one claim that no surviving artefact supports:
 % S_sf correlates weakly with RES yet strongly with V_ECC, which suggests an
 % indirect path S_sf -> V_ECC -> CR. The crossCorrResults_* files it rested on
 % were fitted to the pre-rebuild method field and were renamed .stale; the
@@ -25,14 +25,14 @@ function X = metric_crosscorr(dataDir, opts)
 %
 % UNIT OF ANALYSIS
 % ===========================================================================
-% The (method, length) cell mean within length, the same unit Section VIII-A
-% argues for and the same one Table IX uses. A pooled per-trial matrix is
+% The (method, length) cell mean within length, the same unit Section 8.1
+% argues for and the same one Table 8 uses. A pooled per-trial matrix is
 % computed alongside it, because a metric pair can look related pooled and
-% unrelated within length for exactly the reason Section VIII-C sets out, and
+% unrelated within length for exactly the reason Section 8.3 sets out, and
 % the two must be visibly separate rather than silently averaged.
 %
-% Out-of-scope methods (Section III-I) are excluded by default. They are two
-% leverage points in a field of twenty-odd, and Section VIII-G measures what
+% Out-of-scope methods (Section 3.9) are excluded by default. They are two
+% leverage points in a field of twenty-odd, and Section 8.7 measures what
 % they do to a correlation; there is no reason to let them do it again here.
 %
 % OPTIONS
@@ -168,7 +168,7 @@ function X = metric_crosscorr(dataDir, opts)
    fprintf(['\n  Rows are cell means within length, Fisher-z averaged over lengths\n' ...
             '  and then over sweeps. The pooled per-trial matrix is in the returned\n' ...
             '  struct as .pooled; a pair that is strong there and weak here differs\n' ...
-            '  for the reason of Section VIII-C and must not be quoted from the\n' ...
+            '  for the reason of Section 8.3 and must not be quoted from the\n' ...
             '  pooled form.\n\n']);
    if ~opts.apply
       fprintf('  DRY RUN - re-run with struct(''apply'', true) to write crossCorrResults_*.\n\n');

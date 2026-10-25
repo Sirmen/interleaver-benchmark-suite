@@ -2,15 +2,17 @@
 % S-INTERLEAVING SIMULATION FRAMEWORK
 % R. Tanju Sirmen
 %
-% Bu blok koddan uretildi: cagri grafigi taranarak, dosya adlari gercekte
-% bulunduklari klasorlere gore gruplandi. Elle yazilmadi.
+% The map below was generated from the code: the call graph was walked and
+% the file names grouped by the folder each one actually sits in. Paths are
+% those of this release.
 % =========================================================================
 %
-% CALISMA SIRASI (bu dosyanin adimlari)
+% ORDER OF EXECUTION (the steps of this file)
 % -------------------------------------------------------------------------
-%  0. loadFactorTables         -> PrimeFactorLoader, PrecomputedInterleaverLoader
+%  0. loadFactorTables         local function at the foot of this file
+%                              -> PrimeFactorLoader, PrecomputedInterleaverLoader
 %  1. configure_simulation     -> configure_FEC_parameters -> calcParametersRS
-%  2. run_simulations_sci      ANA DONGU  (interleave_all_pc yolu)
+%  2. run_simulations_sci      THE MAIN LOOP  (the interleave_all_pc path)
 %  3. calcKPIs                 -> calcKPIs_engine
 %  4. calcANOVA_analysis
 %  5. calcCorrelation_analysis -> prepare_correlation_data, displayCorrResults
@@ -18,122 +20,139 @@
 %  8. save_results / saveCrossCorrelationResults / verify_saved_results
 %  9. plot_all_results
 %
-% NOT: adim 6 yok (numaralandirma tarihsel). run_simulations.m ve
-%      analyze_and_plot_results.m ARTIK KULLANILMIYOR; canli yol _sci'dir.
-%      Asagidaki klasor listeleri _sci kapanisina gore guncellendi
-%      (2026-10-23): eski hattan erisilen dosyalar karantinaya alindi.
+% There is no step 6: the numbering is kept as it was so that the step
+% numbers in the console output and in the saved logs still line up.
 %
 % -------------------------------------------------------------------------
-% interleaversTest/            ust seviye akis
+% harness/                     top-level flow
 % -------------------------------------------------------------------------
-%  main_simulation_wrapper.m       bu dosya
-%  configure_simulation.m          config + params; burstRegime secici burada
-%  configure_FEC_parameters.m      -> calcParametersRS.m
-%  configure_burst_parameters.m    hedef gurultu, chunkSizes, GE dali
-%  configure_interleaver_params.m  yontem parametreleri.
-%                                  KALDIRILDI: Lmatrix, Kmatrix, hStep, hStep_hs
-%                                  (hesaplaniyor ama hicbir yerde okunmuyordu)
-%                                  KALDIRILDI: algOpts'un eski 9 alani (skorlama
-%                                  sirali permutasyon uzerinde calisiyordu = sabit)
-%  run_simulations_sci.m           ana dongu + alt fonksiyonlar:
+%  main_simulation_wrapper.m       this file
+%  configure_simulation.m          config + params; the regime and grid
+%                                  selectors live here
+%  configure_FEC_parameters.m      -> calcParametersRS.m (common/)
+%  configure_burst_parameters.m    target noise, chunkSizes, the GE branch
+%  configure_interleaver_params.m  per-method parameters
+%  run_simulations_sci.m           the main loop, with its own subfunctions:
 %                                    run_single_trial, genBurstMask,
 %                                    injectBurstErrors_encoded, initResults
+%  estimate_L_for_size.m           frame length for a requested payload
 %  save_results.m                  -> burstRegimeTag, saveVars_YMD
 %  saveCrossCorrelationResults.m   -> burstRegimeTag
-%  verify_saved_results.m          kayit dogrulama (rejim/alan/KPI kontrolu)
-%  plot_all_results.m              tum cizim fonksiyonlarinin dagiticisi
 %
 % -------------------------------------------------------------------------
-% int_utils/                   simulasyon cekirdegi
+% harness/int_utils/           the simulation core
 % -------------------------------------------------------------------------
-%  interleave_all_pc.m         CANLI serpistirme dagiticisi (24 yontem)
-%  deinterleave_all_pc.m       jenerik: hepsini deinterleaver_universal'a verir
-%  interleave_all.m            _pc'siz varyant - su an KULLANILMIYOR
-%  deinterleave_all.m          _pc'siz varyant - su an KULLANILMIYOR
-%  injectBurstErrors_all.m     maskeyi tum yontemlere ayni sekilde uygular
-%  genGilbertElliottMask.m     iki durumlu Markov patlama kanali        [YENI]
-%  burstRegimeTag.m            single/multi/ge1p00/ge0p70 dosya oneki   [YENI]
-%  encoderRS_CW.m  decoderRS_CW.m  decodeRS_all.m  calcDecErrorRates_all.m
-%  calcAvIntRuntime_all.m  calcCR_all.m
-%  estimate_L_for_size.m  calculateSNR.m
-%  collectStatistics_all.m     yontemler uzerinde doner
-%    -> collectStatistics_x.m  TUM OLCUTLER burada toplanir:
+%  interleave_all_pc.m         the live interleaving dispatcher (26 methods)
+%  deinterleave_all_pc.m       generic: hands every method to
+%                              deinterleaver_universal
+%  interleaver_generic_pc.m    the per-method call site behind the dispatcher
+%  injectBurstErrors_all.m     applies one mask to every method identically
+%  genGilbertElliottMask.m     the two-state Markov burst channel
+%  burstRegimeTag.m            the single/multi/ge1p00/ge0p70 file prefix
+%  decodeRS_all.m  calcDecErrorRates_all.m  calcAvIntRuntime_all.m
+%  calcKPIs.m  calcKPIs_engine.m  calcANOVA_analysis.m
+%  calcCorrelation_analysis.m  calcCrossCorrelationAnalysis.m
+%  displayCorrResults.m  verify_saved_results.m
+%  collectStatistics_all.m     loops over the methods
+%    -> collectStatistics_x.m  EVERY METRIC IS GATHERED HERE:
 %         calcErrorSpreadingMetrics   eta_ES, delta_BS
 %         calcECCStats                S_ECC, V_ECC, U_ECC
 %         calcSourceSeparationFactor  S_sf
 %         calc_spread_factor_invperm  S_factor
 %         intraVectorSeparations      sepMin, sepAvg, eta_sep, sepCV
 %         calcAdjDist                 adjMin, adjAvg, adjCV
-%         analyzeSpectralProperties   PSR   -> metrics/calc_apsr
+%         analyzeSpectralProperties   PSR  -> metrics/calc_apsr
 %         calcLaplacianEnergy         laplacianEnergy
 %         measureBurstDistribution    delta_G
-%  calcKPIs.m  calcKPIs_engine.m  calcANOVA_analysis.m
-%  calcCorrelation_analysis.m  calcCrossCorrelationAnalysis.m
-%  analyzeSpectralProperties.m  calcAdjDist.m  calcSourceSeparationFactor.m
 %
 % -------------------------------------------------------------------------
-% metrics/                     olcut cekirdegi
+% metrics/                     the metric core
 % -------------------------------------------------------------------------
 %  calcErrorSpreadingMetrics.m  calcECCStats.m  calc_spread_factor_invperm.m
+%  calc_apsr.m  calc_bguar_invperm.m  calc_esload_invperm.m
+%  calc_dispersion_invperm.m  calc_adjdispersion_invperm.m
+%  calc_snew_invperm.m  calc_srandom_spread_invperm.m
+%  calcBlockPatternFitScore.m
 %  measureBurstDistribution.m   -> analyzeBurstDistribution.m
 %                               -> calcDistributionEfficiency.m
 %                                    -> calcGiniCoefficient.m
 %                                    -> assessECCSustainability.m
-%  intraVectorSeparations_.m  intraVectorDistances_.m  calcLaplacianEnergy_.m
-%  calc_apsr.m
 %
 % -------------------------------------------------------------------------
-% int_common/                  paylasilan yardimcilar
+% common/                      shared numeric helpers and the RS codec
 % -------------------------------------------------------------------------
-%  swapRowsOddEven.m  swapColsOddEven.m       (S-Interleaving takas cekirdegi)
+%  encoderRS_CW.m  decoderRS_CW.m  getRSCodec.m  calcParametersRS.m
+%  intraVectorSeparations.m  intraVectorDistances.m  pairwiseRowDistances.m
+%  calcLaplacianEnergy.m  calcCoefficientOfVariation.m  calculateSNR.m
 %  controlCorrectShape_1N.m  controlCorrectShape_N1.m
-%  extractMetricData.m  formatMetricNames.m  getMethodStats.m
-%  prepare_correlation_data.m
+%  createLatinSquare.m  findUniqueMultiplierPairs.m  saveVars_YMD.m
 %
 % -------------------------------------------------------------------------
-% interleavers/  (int_<yontem>/ alt klasorleri)      24 YONTEM
+% harness/int_common/          shared harness helpers
 % -------------------------------------------------------------------------
-%  matris tabanli : block  matrix  helical  helicalScan  diagonal  spiral
-%  stokastik      : random  chaotic
-%  cebirsel       : algebraic (QPP/LPP, spread'e gore secilmis f1,f2)
-%                   turbo (QPP)  prime (us alma / ilkel kok)  latinSquare
-%  cok kademeli   : hierarchical (kaba blok o ince blok-ici adim)
-%  cok boyutlu    : multiDim (3-B kafes, Blaum-Bruck-Vardy eksen dondurmesi)
-%  OFDM eksenli   : time (sembol ekseni)  freqDeterm / freqRandom (alt tasiyici)
-%                   ikisi ayni Nsc x Nsym izgarasinin FARKLI eksenlerini permute
-%                   eder - DVB-T/T2 ve LTE'nin ayri ayri tanimladigi cift
-%  akis           : convolutional
-%  snake          : snake   (eski 'cross' - CIRC evrisimli cross DEGIL)  [AD DEGISTI]
-%  yuksek spread  : srandom  goldenRP  drp  arp                          [YENI]
-%  onerilen       : S       -> interleaver_S / interleaver_S_pc
-%                             -> getLK_S_min -> getFactorPairs -> getLK_strategy
+%  swapRowsOddEven.m  swapColsOddEven.m   (the S-Interleaving swap core)
+%  getSizeList.m      the single owner of the length grid
+%  extractMetricData.m  getMethodStats.m  prepare_correlation_data.m
+%
+% -------------------------------------------------------------------------
+% interleavers/  (one int_<method>/ subfolder each)       26 METHODS
+% -------------------------------------------------------------------------
+%  matrix-based   : block  matrix  helical  helicalScan  diagonal  spiral
+%  stochastic     : random  chaotic
+%  algebraic      : algebraic (QPP/LPP, f1 and f2 chosen on spread)
+%                   turbo (QPP)  prime (exponentiation / primitive root)
+%                   latinSquare
+%  multi-stage    : hierarchical (a coarse block step then a fine
+%                   within-block step)
+%  multi-dimensional : multiDim (3-D lattice, Blaum-Bruck-Vardy axis
+%                   rotation)
+%  OFDM axes      : time (symbol axis)
+%                   freqDeterm / freqRandom (subcarrier axis)
+%                   the two permute DIFFERENT axes of the same Nsc x Nsym
+%                   grid - the pair that DVB-T/T2 and LTE define separately
+%  stream         : convolutional
+%  snake          : snake (formerly 'cross'; NOT the convolutional cross
+%                   interleaver of CIRC)
+%  high-spread    : srandom  goldenRP  drp  arp
+%  code-matched   : blockCM  convCM
+%  proposed       : S       -> interleaver_S
+%                             -> getLK_S_min -> getFactorPairs
+%                                            -> getLK_strategy
 %                                            -> findUniqueMultiplierPairs
 %                                            -> isInPrimesTable
-%  deinterleaver_universal.m  permutasyondan tersini alir - hepsi icin yeterli
+%  deinterleaver_universal.m   inverts a permutation; enough for all of them
+%  choose_balanced_factors.m   the near-square factorisation several
+%                              matrix-based methods share
 %
 % -------------------------------------------------------------------------
-% factor_factory/              onhesaplanmis tablolar
+% harness/factor_factory/      the precomputed tables
 % -------------------------------------------------------------------------
 %  PrimesFactorsGenerator.m  PrecomputeFactorsGenerator.m
-%  PrecomputeInterleaversGenerator.m
+%  PrecomputeInterleaversGenerator.m  run_PrecomputeInterleavers.m
 %  PrimeFactorLoader.m  PrecomputedInterleaverLoader.m
-%  PrimeFactor_PrecomputedLoader.m
+%  getFactorPairs.m  isInPrimesTable.m  DiagnosePrecomputedTable.m
+%  clearHarnessCaches.m   call this after regenerating any table: four of
+%                         the loaders cache by directory path
 %
 % -------------------------------------------------------------------------
-% health/                      kampanya saglik kontrolleri H0-H6
+% health/                      campaign health checks H0-H6
 % -------------------------------------------------------------------------
-%  health_check.m       H0-H6; her kontrol verdict dondurur, puan vermez
-%  health_selftest.m    her bloke eden kontrolun BASARISIZ olabildigini gosterir
+%  health_check.m       H0-H6; every check returns a verdict, never a score
+%  health_selftest.m    shows that every blocking check CAN fail
 %
 % -------------------------------------------------------------------------
-% int_plotting/  (plot_all_results.m tarafindan cagrilir)
+% plotting/  (called by plot_all_results.m)
 % -------------------------------------------------------------------------
 %  plotKPItraces  plotKPIbyNoise  plotKPIBoxplots  plotKPIScenarios
 %  plotECCMetrics  plotAdjacencyMetrics  plotAdjBlock  plotSepAvg
 %  plotDistanceSpectrum  plotRandomnessPeriodicity  plotRadarComparison
 %  plotNoiseDistribution  plotNoisePositions  plotMetricCrossCorrelations
 %  plotPerformanceComplexityTradeoff  barRuntimes  barRuntimeTradeoff
-%  plot_anova_results  plot_correlation_results        (hepsi -> savePlot.m)
+%  plot_anova_results  plot_correlation_results  formatMetricNames
+%                                                   (all -> savePlot.m)
+%
+% These are the campaign's own diagnostic plots. The seven figures of the
+% paper are produced by analysis/, not from here.
 %
 % =========================================================================
 
@@ -199,7 +218,6 @@ try
    fprintf(strcat('\t',burstType,' Noise regimes (edge percentages): '));
    fprintf('%.4f ', config.noiseLevels);
    fprintf('\n\t=== SIMULATION STARTS ===');
-   % [results, success, paramsInt, burstConfig] = run_simulations(config, params, paramsInt);
    [results, success, paramsInt, burstConfig] = run_simulations_sci(config, params, paramsInt, tables);
    if ~success; fprintf('Simulations failed...\n'); return; end
    

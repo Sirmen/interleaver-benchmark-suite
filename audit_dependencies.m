@@ -203,10 +203,10 @@ function audit_dependencies(releaseRoot, outFile)
    % Everything above compares the call closure against the files on disk.
    % An archive is built from the commit, so a file present here and absent
    % from git does not ship, and a file deleted here but still tracked does.
-   % On 2026-10-23 this directory held seven metric implementations that git
-   % had never seen, and tracked ninety files that had been deleted from it,
-   % while the report above said nothing was missing. Both lists were true
-   % of the directory and neither was true of the release.
+   % This directory has held metric implementations git had never seen while
+   % tracking files that had been deleted from it, with the report above
+   % saying nothing was missing: both lists true of the directory, neither
+   % true of the release.
    git = local_git(releaseRoot);
    if isempty(git)
       say('\n=== GIT: not a repository, or git unavailable - not checked ===\n');

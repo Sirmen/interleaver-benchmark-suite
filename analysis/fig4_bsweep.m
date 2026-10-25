@@ -17,8 +17,8 @@ function out = fig4_bsweep(S, opts)
 % giniLoad rises to about 8n and is flat above it; overT peaks near 12n and
 % falls as the threshold saturates; the two codeword-load statistics keep
 % climbing to 24n. A protocol prescribing one B for all five reads two of
-% them off their own plateau, which is why Section XI-A sends the reader to
-% the per-metric column of Table X instead.
+% them off their own plateau, which is why Section 10.1 sends the reader to
+% the per-metric column of Table 10 instead.
 %
 % One further thing the figure must show honestly: cvLoad is not monotone in
 % its own parameter. A metric whose value rises, falls and rises again as the
@@ -28,7 +28,7 @@ function out = fig4_bsweep(S, opts)
 %
 % INPUT
 %   S     the struct metric_scorecard returns. Passing it in rather than
-%         re-running the sweep matters: the figure and Table IX then come from
+%         re-running the sweep matters: the figure and Table 8 then come from
 %         one computation, and cannot disagree.
 %
 % OPTIONS
@@ -80,7 +80,7 @@ function out = fig4_bsweep(S, opts)
    % LEGEND INSIDE, TOP LEFT. Below the axes it cost a third of the figure
    % height. Top left is empty by construction: at B below 2n every
    % statistic sits under 0.3, and the axis is fixed at [0 1], so a vertical
-   % legend there covers no curve - the author's v18 layout, now in code.
+   % legend there covers no curve - the author's own layout, now in code.
    f = fig_style('new', 'wide', 2.0);
    % Width comes from the figure, not from a literal repeated here: the two
    % used to be set in different places and a change to one left the other
@@ -167,5 +167,5 @@ function out = fig4_bsweep(S, opts)
    end
    fprintf(['  A statistic that swings before its own peak has no B at which its\n' ...
             '  value is a property of the permutation rather than of the parameter,\n' ...
-            '  and Section VIII-E declines to recommend it at any B.\n\n']);
+            '  and Section 8.4 declines to recommend it at any B.\n\n']);
 end

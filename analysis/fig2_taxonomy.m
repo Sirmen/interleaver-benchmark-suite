@@ -24,9 +24,9 @@ function fig2_taxonomy(opts)
 %
 % CELL MEMBERSHIP FOLLOWS THE ARGUMENT SET THAT IS USED, NOT THE SIGNATURE.
 % ===========================================================================
-% This is the correction carried by the v40 manuscript, and it is the one
-% thing in this script that is easy to get wrong again. Of the five metrics
-% of Section VI-G, only overT compares a load with the correction capacity:
+% This is the one thing in this script that is easy to get wrong again. Of
+% the six load statistics of Section 6.7, only overT compares a load with the
+% correction capacity; the five designMetricScore returns are:
 %
 %   maxErrCW    = max_s max_k e_k(s)                       no t  -> n-aware
 %   overT       = |{s : max_k e_k(s) > t}| / (N - B + 1)   uses t -> (n,t)-aware
@@ -35,7 +35,7 @@ function fig2_taxonomy(opts)
 %   giniLoad    = E_s[ G(e(s)) ]                           no t  -> n-aware
 %
 % A signature of the form M(pi, n, t, B) proves what a function receives, not
-% what it uses. Four of the five receive t and never read it, so they belong
+% what it uses. Four of these five receive t and never read it, so they belong
 % one column to the left. Do not move them back.
 %
 % TYPE SIZE
@@ -111,12 +111,11 @@ function fig2_taxonomy(opts)
    % separator, and the counts below split on commas, so a missing one is both
    % a typographic and an arithmetic error.
    % A superscript asterisk marks a metric introduced in this paper. TEN
-   % carry one. Seven did before v98: the five of Section VI-G, with overT in
-   % the tinted cell and the other four in the a priori n-aware cell beside it,
-   % and sep_{min} and adj_{CV} in the a priori code-agnostic cell, the
-   % worst-case and dispersion counterparts of eta_{sep} and adj_{min}. v98
-   % adds esLoad to the n-aware cell and S_{ach} and adj_{gamma} to the
-   % code-agnostic cell.
+   % carry one: the five of Section 6.7, with overT in the tinted cell and the
+   % other four in the a priori n-aware cell beside it; esLoad in that same
+   % cell; and in the a priori code-agnostic cell sep_{min} and adj_{CV}, the
+   % worst-case and dispersion counterparts of eta_{sep} and adj_{min}, with
+   % S_{ach} and adj_{gamma}.
    % THREE join WITHOUT a marker, because they are taken from the literature
    % rather than stated here: S_{new} [13], gamma [14], and B_{guar}, which
    % returns the classical Ramsey-Forney guarantee - for the block interleaver
@@ -125,9 +124,9 @@ function fig2_taxonomy(opts)
    % the guarantee. The marker is defined in the
    % manuscript caption and no longer keyed inside the drawing: the key cost a
    % line of height and said what the caption already says.
-   % The Section VIII verdict is deliberately NOT drawn. Provenance and outcome
+   % The Section 8 verdict is deliberately NOT drawn. Provenance and outcome
    % are orthogonal, the figure argues the taxonomy, and the verdict has three
-   % objects of its own (Tables X and XI, Fig. 5). Do not add a second mark.
+   % objects of its own (Tables 10 and 11, Fig. 5). Do not add a second mark.
    % The marker is '*' and not '\dagger' on purpose: the dagger is not in the
    % TeX subset MATLAB's text interpreter accepts, and an unsupported command
    % is printed verbatim rather than raising an error.
@@ -153,9 +152,9 @@ function fig2_taxonomy(opts)
    rowLab = {{'\bf a priori', '\rm (no realization)'}, ...
              {'\bf a posteriori', '\rm (realization)'}};
 
-   % WIDTH AND HEIGHT. v98 put eleven metrics in the a priori code-agnostic
-   % cell and the figure was made taller to hold them: five lines at 90 mm,
-   % hU = 42 units, 2.50 in overall. Height was the wrong lever. Elsevier
+   % WIDTH AND HEIGHT. Eleven metrics sit in the a priori code-agnostic cell,
+   % and making the figure taller to hold them was the wrong lever: five
+   % lines at 90 mm, hU = 42 units, 2.50 in overall. Elsevier
    % allows 140 mm as well as 90, the extra 56 % of width goes almost
    % entirely to that one cell, and lines come out instead of inches going in.
    %
@@ -243,7 +242,7 @@ function fig2_taxonomy(opts)
    % length runs along the row height and cannot be shorter than its longest
    % line. Adding lines to that label does not help - it is already two - and
    % dropping the parenthetical buys 0.06 in while costing the distinction the
-   % caption leans on. Measured on the v76 export, rotated: hL = 24 leaves
+   % caption leans on. Measured on the rotated export: hL = 24 leaves
    % about 0.05 in of slack and hL = 22 clips.
    % yTop, hU, hL and y0 are set above, before the figure, so that the crop
    % can be derived from them rather than typed twice.
@@ -310,14 +309,14 @@ function fig2_taxonomy(opts)
    end
 
    % The figure names every metric in the study, so the counts are checks the
-   % script can run rather than things to eyeball. The study scores nineteen
-   % metrics and all nineteen are named across the six cells; a figure showing
-   % eighteen has lost one silently, which is the failure mode a picture is
+   % script can run rather than things to eyeball. The study scores twenty-five
+   % metrics and all twenty-five are named across the six cells; a figure showing
+   % twenty-four has lost one silently, which is the failure mode a picture is
    % worst at revealing - and there is no longer a table to catch it. The
-   % second and third checks are the ones the v40 correction added, with the
-   % v98 counts: exactly two metrics may sit in the a priori, (n,t)-aware
-   % cell, and exactly ten metrics in the whole figure may carry the marker -
-   % B_{guar} shares that cell but not the marker.
+   % second and third checks are the cell and marker counts: exactly two
+   % metrics may sit in the a priori, (n,t)-aware cell, and exactly ten
+   % metrics in the whole figure may carry the marker - B_{guar} shares that
+   % cell but not the marker.
    total = 0;
    for r = 1:2
       for c = 1:3
@@ -345,7 +344,7 @@ function fig2_taxonomy(opts)
    if nNew ~= 10
       ok = false;
       fprintf(2, ['\n  %d METRICS CARRY THE NEW-METRIC MARKER; THIS PAPER STATES 10\n' ...
-                  '  FIRST: the 5 of Section VI-G, sep_min, adj_CV, esLoad, S_ach\n' ...
+                  '  FIRST: the 5 of Section 6.7, sep_min, adj_CV, esLoad, S_ach\n' ...
                   '  and adj_gamma. S_new, gamma and B_guar are NOT marked.\n'], nNew);
    end
    if ok

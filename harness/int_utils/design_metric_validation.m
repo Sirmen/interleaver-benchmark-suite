@@ -8,9 +8,10 @@ function D = design_metric_validation(dataPath, opts)
 % ---------------------------------------------------------------------------
 % The metric taxonomy has one empty cell: no published measure scores a
 % permutation against a known code at design time, without a channel model.
-% overT and maxErrCW occupy it. Identifying an empty cell is a weak claim on
-% its own - a referee is entitled to ask whether anything useful lives there -
-% so these two are put through the SAME validation as the other fourteen:
+% overT fills it, with B_guar added later; maxErrCW is a priori and n-aware and
+% is scored here beside it. Identifying an empty cell is a weak claim on its
+% own - a referee is entitled to ask whether anything useful lives there - so
+% both are put through the SAME validation as every other metric of the suite:
 % correlate against RES, across all eight sweeps, against a threshold declared
 % in advance.
 %
@@ -20,7 +21,7 @@ function D = design_metric_validation(dataPath, opts)
 %
 % GRANULARITY DIFFERS FROM THE OTHER METRICS, AND THAT MUST BE STATED
 % ---------------------------------------------------------------------------
-% The metrics of Section VIII are per trial: each has a value for every
+% The metrics of Section 8 are per trial: each has a value for every
 % (method, length, noise, run). overT and maxErrCW are per PERMUTATION - they
 % are deterministic functions of (pi, n, t, B) with no channel realization in
 % them, so there is exactly one value per (method, length).
@@ -31,7 +32,7 @@ function D = design_metric_validation(dataPath, opts)
 % removes within-cell noise and tends to RAISE |rho|. The comparison that is
 % legitimate is between design metrics and other metrics computed at the SAME
 % granularity, which is why per-trial metrics are recomputed at cell level here
-% as a reference column rather than quoted from Section VIII.
+% as a reference column rather than quoted from Section 8.
 %
 % BURST LENGTH IS AN INPUT, NOT A FITTED PARAMETER
 % ---------------------------------------------------------------------------
@@ -248,7 +249,7 @@ function D = design_metric_validation(dataPath, opts)
 
       % Reference rows: per-trial metrics re-aggregated to the SAME cells, so
       % the design metrics have something legitimate to be compared against.
-      % Quoting Section VIII's per-trial values here would compare a cell-mean
+      % Quoting Section 8's per-trial values here would compare a cell-mean
       % correlation with a per-trial one and read as an advantage that is an
       % artifact of averaging.
       [rhoRef, rhoRefW] = local_refRows(f, gm, gl, resBar, {});
@@ -359,12 +360,6 @@ function [rhoRef, rhoRefW] = local_refRows(kpiFile, gm, gl, resBar, ~)
 % against. Quoting Section 8's per-trial values here would set a cell-mean
 % correlation beside a per-trial one and read as an advantage that is an
 % artifact of averaging.
-%
-% RECONSTRUCTED, 2026-10. This helper was lost from the file while its call at
-% the top was left in place, so design_metric_validation could not run to
-% completion - including in release v1.0.3, which the manuscript cites. It is
-% rebuilt here from the contract stated at the call site and from
-% metric_scorecard's decoding of the same data.
 %
 % It cannot move the design-metric rows. Those are computed from permutations
 % a hundred lines above and never touch this function; only the three "ref:"

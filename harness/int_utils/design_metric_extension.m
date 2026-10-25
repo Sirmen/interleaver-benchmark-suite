@@ -1,26 +1,28 @@
 function E = design_metric_extension(dataPath, opts)
-%DESIGN_METRIC_EXTENSION  Score classical metrics left out of the nineteen.
+%DESIGN_METRIC_EXTENSION  Score classical metrics left out of the published suite.
 %
-%   E = design_metric_extension('C:\TS_data\S-Int\results_v2', ...
-%          struct('dataDir', 'C:\...\interleaverDeinterleaver\data_PrimeFactor'))
+%   E = design_metric_extension('<resultsDir>', ...
+%          struct('dataDir', '<path to data_PrimeFactor>'))
 %
 % WHAT THIS ADDS
 % ---------------------------------------------------------------------------
-% The published suite scores nineteen metrics. Five further a priori measures
-% from the classical interleaver literature are not among them:
+% The published suite scores twenty-five metrics (Table 8). Five further a
+% priori measures from the classical interleaver literature were scored here
+% first; four of them - Snew, S_ach, B_guar and esLoad - were then taken into
+% the suite, and dispersion is the one that remains outside it:
 %
 %   dispersion  Heegard-Wicker, restated as equation (14) of Takeshita and
 %               Costello 2000. Fraction of distinct displacement vectors. This
 %               is the quality measure [14] ACTUALLY uses: that paper defines
 %               no spread factor, so the metric the manuscript attributes to it
-%               in equation (6b) is not in it, and the metric it does use is
+%               in equation (9) is not in it, and the metric it does use is
 %               not in the suite. Validated against the source's own published
 %               values (0.81 for random, 1 for a Costas array).
 %   Snew        Crozier 2000. The L1 combined spread the benchmark ITSELF uses
-%               to re-search DRP's stride and dither (Table III), i.e. a metric
+%               to re-search DRP's stride and dither (Table 3), i.e. a metric
 %               the benchmark selects with but does not validate. The turbo
 %               literature's "spread" is this L1 form, not the Euclidean one
-%               that equation (6b) of the manuscript computes, so this row also
+%               that equation (9) of the manuscript computes, so this row also
 %               settles what the spread family actually scores.
 %   S_ach       Achieved S-random spread. srandom carries the published rule
 %               s = floor(sqrt(N/2)); the achieved value is defined for every
@@ -29,7 +31,7 @@ function E = design_metric_extension(dataPath, opts)
 %               which can put more than t errors in any codeword. This is the
 %               classical Ramsey-Forney depth guarantee stated for an arbitrary
 %               permutation, and it is a priori and (n,t)-aware, so it lands in
-%               the cell the manuscript reports as holding overT alone.
+%               the cell the manuscript reports as holding overT and B_guar.
 %   esLoad      The design-time counterpart of eta_ES, which is the one
 %               a posteriori statistic in the suite that passes every
 %               criterion and has no counterpart defined for it. Read at the
@@ -249,7 +251,7 @@ function E = design_metric_extension(dataPath, opts)
    % reverses sign between regimes still clears the threshold in each of them
    % and reads 8/8. RW already holds the signed per-condition values, so the
    % test costs nothing - it was simply never reported, which left the C4
-   % column of Table X unfillable from this script's output.
+   % column of Table 10 unfillable from this script's output.
    okC4 = false(1, nCol);
    for c = 1:nCol
       v = RW(~isnan(RW(:, c)), c);

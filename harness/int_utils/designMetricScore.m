@@ -10,10 +10,9 @@ function [overT, maxErr, meanMax, cvLoad, giniLoad] = designMetricScore(perm, B,
 % Verified against a brute-force implementation over 320 random permutations:
 % overT, maxErrCW, meanMaxCW and cvLoad agree exactly. giniLoad is now also
 % exhaustive (every start position): it used to be read on a subsample of about
-% two hundred positions, which is not the statistic of Section V-F. A codeword
+% two hundred positions, which is not the statistic of Section 5.5. A codeword
 % holds at most n symbols, so its load never exceeds min(B, n) and the Gini is
 % read off the histogram in O(n) per position - the full sweep is O(N*n).
-% (2026-09-27, v26: subsampling removed.)
 %
 % Exhaustive over every burst start position, in O(N) rather than O(N^2/n).
 %

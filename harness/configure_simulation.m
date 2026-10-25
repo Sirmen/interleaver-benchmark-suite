@@ -80,16 +80,20 @@ function [config, params] = configure_simulation()
    % burst count, burst lengths and gaps are drawn rather than dictated. This
    % turns Sec. 2.2.3's "memoryless between bursts" ASSUMPTION into a tested
    % claim. config.singleBurst is ignored while this is on.
-   % NOT: "config.singleBurst yok sayiliyor" demek, GE acikken maske uretiminin
-   % singleBurst'u OKUMADIGI anlamina gelir - singleBurst'un GE'yi kapattigi
-   % anlamina DEGIL. Ikisi bagimsiz; asagidaki rejim secicisi tek dogru kaynak.
+   % NOTE: "config.singleBurst is ignored" means that while GE is on, mask
+   % generation does not READ singleBurst. It does NOT mean that singleBurst
+   % turns GE off. The two are independent, and the regime selector below is
+   % the single source of truth.
    config.gilbertElliott  = false;
    config.ge_errProbBad   = 1.0;  % 1.0 = solid bursts (matches single/multi);
                                   % 0.7 = fragmented bursts (fading flavour).
    config.ge_meanBurstLen = [];   % [] -> targetNoisyCount / (maxBurstCount*e_B)
    config.ge_maxDraws     = 50;   % redraws before the count is nudged in-band
-   config.ge_bandMode     = 'target';  % v2: accept within half a bin of the target
-                                       % ('grid' reproduces the v1 campaign)
+   config.ge_bandMode     = 'target';  % accept within half a bin of the bin's
+                                       % own target. 'grid' accepts anywhere in
+                                       % the whole noise grid, which is what the
+                                       % archived campaign did - see
+                                       % configure_burst_parameters
 
    %%% --- METRICS ---
    config.KPImetrics = { ... % KPI metrics - Primary Performance (End-to-End Success)
@@ -130,10 +134,10 @@ function [config, params] = configure_simulation()
                            'time', 'freqRandom', 'freqDeterm', 'chaotic', 'prime', ...
                            'block', 'algebraic', 'turbo', 'convolutional', ...
                            'srandom', 'goldenRP', 'drp', 'arp', ...   % high-spread references
-                           'blockCM', 'convCM', ...                   % code-matched classics (v2)
+                           'blockCM', 'convCM', ...                   % code-matched classics
                            'S'};                                      % 26 methods
-   % CAMPAIGN v2 (2026-09). Two changes to the method list, both deliberate:
-   %  * the method list is exactly the 26 the paper reports.
+   % THE METHOD LIST. Two deliberate choices:
+   %  * the list is exactly the 26 methods the paper reports.
    %  * 'blockCM' and 'convCM' are IN: the classical interleavers matched to
    %    the code, which a reviewer rightly asked for.
    %      blockCM  row-column block interleaver whose rows are the codewords
@@ -194,22 +198,23 @@ function [config, params] = configure_simulation()
    % Selected PDFs for this simulation
    params.dPDF = {'Uniform'}; % config.allPDFs
 
-   % ---- REJIM SECICI: tek yerden ayarlayin --------------------------
-   % Dort kosu, dort deger. GE acikken singleBurst maskeyi etkilemez, ama
-   % save_results / saveCrossCorrelationResults dosya onekini buradan
-   % turetilen etikete gore secer - yani rejimler birbirine karismaz.
+   % ---- REGIME SELECTOR: set it in one place only --------------------
+   % Four runs, four values. While GE is on, singleBurst does not affect the
+   % mask, but save_results and saveCrossCorrelationResults take the file
+   % prefix from the tag derived here, so the regimes cannot run into each
+   % other.
    %
-   %   'multi'   -> config.singleBurst=false, GE kapali        -> dosya oneki 'multi'
-   %   'single'  -> config.singleBurst=true,  GE kapali        -> 'single'
-   %   'ge1p00'  -> GE acik, e_B = 1.0 (saglam patlamalar)     -> 'ge1p00'
-   %   'ge0p70'  -> GE acik, e_B = 0.7 (parcali patlamalar)    -> 'ge0p70'
+   %   'multi'   -> config.singleBurst=false, GE off           -> prefix 'multi'
+   %   'single'  -> config.singleBurst=true,  GE off           -> 'single'
+   %   'ge1p00'  -> GE on, e_B = 1.0 (solid bursts)            -> 'ge1p00'
+   %   'ge0p70'  -> GE on, e_B = 0.7 (fragmented bursts)       -> 'ge0p70'
 
-   burstRegime = 'multi';    % <-- SADECE BURAYI DEGISTIRIN
+   burstRegime = 'multi';    % <-- CHANGE THIS LINE AND NOTHING ELSE
 
-   % Bir surucu betigin (run_all_sweeps.m) sekiz kosuyu elle duzenleme
-   % yapmadan sirayla calistirabilmesi icin global gecersiz kilma. Global
-   % bos ise bu dosya tek dogru kaynak olmayi surdurur - yani elle
-   % calistirdiginizda hicbir sey degismez.
+   % A global override, so that a driver script (run_all_sweeps.m) can run the
+   % eight sweeps in turn without editing this file. While the global is empty
+   % this file remains the single source of truth: running it by hand changes
+   % nothing.
    global TS_BURST_REGIME %#ok<GVMIS>
    if ~isempty(TS_BURST_REGIME), burstRegime = TS_BURST_REGIME; end
 
@@ -225,49 +230,54 @@ function [config, params] = configure_simulation()
          config.singleBurst = false; config.gilbertElliott = true;
          config.ge_errProbBad = 0.7;
       otherwise
-         error('configure_simulation: bilinmeyen burstRegime "%s"', burstRegime);
+         error('configure_simulation: unknown burstRegime "%s"', burstRegime);
    end
-   config.burstRegime = burstRegime;   % kayitlarda da dursun
+   config.burstRegime = burstRegime;   % kept on the record as well
 
-   % ---- IZGARA SECICI: tek yerden ayarlayin -------------------------------
-   % Uc kosu tipi. Bu secici hem uzunluk listesini hem de metot listesini
-   % ayarlar; ikisi birbirine bagli oldugu icin ayri ayri elle degistirmeyin.
+   % ---- GRID SELECTOR: set it in one place only --------------------------
+   % Three kinds of run. This selector sets the length list AND the method
+   % list; the two are tied together, so do not change either of them by hand
+   % on its own.
    %
-   %   'common'     ortak izgara, 23 metot (arp HARIC), 50 uzunluk
-   %   'standards'  standart-uyumlu alt kume, 24 metot (arp DAHIL), 8 uzunluk
+   %   'common'     the common grid, 25 methods (arp EXCLUDED), 50 lengths
+   %   'standards'  the standards-compliant subset, 26 methods (arp
+   %                INCLUDED), 8 lengths
    %
-   % NEDEN 'common' IZGARASI K = 36*m
+   % WHY THE 'common' GRID IS K = 36*m
    % ---------------------------------------------------------------------
-   % RS(15,9) altinda K = 36m tam olarak 4m kod sozcugu eder, DOLGU SIFIR, ve
-   % kodlanmis uzunluk L = 60m olur. 60'in katlari ayni anda su dort kosulu
-   % saglar, ki hicbir aritmetik izgara bunu yapamaz:
+   % Under RS(15,9), K = 36m is exactly 4m codewords with ZERO PADDING, and
+   % the encoded length is L = 60m. Multiples of 60 satisfy all four of the
+   % following at once, which no arithmetic grid does:
    %
-   %   L = 0 (mod 4)  standartlastirilmis ARP'nin sarti (ETSI EN 301 790:
-   %                  "N is a multiple of 4")
-   %   4 | L          DRP'nin en kucuk yayinlanmis dither periyodu boler;
-   %                  120'nin katlarinda 8, 240'in katlarinda 16 da boler
-   %   60 = 3*4*5     d = 3 kafes serpistiricisi her uzunlukta uc carpana ayrilir
-   %   dolgu yok      BE = 1 her metotta, yani bant genisligi verimi artik
-   %                  karsilastirmayi bulandirmiyor
+   %   L = 0 (mod 4)  the condition standardized ARP requires (ETSI EN 301
+   %                  790: "N is a multiple of 4")
+   %   4 | L          divides DRP's smallest published dither period; at
+   %                  multiples of 120 it also divides 8, and 16 at
+   %                  multiples of 240
+   %   60 = 3*4*5     the three-dimensional lattice interleaver factors into
+   %                  three dimensions at every length
+   %   no padding     BE = 1 for every method, so bandwidth efficiency no
+   %                  longer clouds the comparison
    %
-   % Ustelik eski 991-uzunluk izgarasindan ~17 kat ucuz: orada ardisik dokuz K
-   % ayni kodlanmis uzunluga dusuyordu, yani ayni permutasyon dokuz kez
-   % odeniyordu.
+   % It is also about 17 times cheaper than the old 991-length arithmetic
+   % grid, where nine consecutive K fell on the same encoded length and the
+   % same permutation was therefore paid for nine times.
    %
-   % NEDEN 'standards' AYRI BIR KOSU
+   % WHY 'standards' IS A RUN OF ITS OWN
    % ---------------------------------------------------------------------
-   % interleave_all_pc'deki bloklar "&& (erM == "")" zinciriyle korunuyor: bir
-   % metot dustugunde sonrakiler hic calismiyor. Bu DOGRU bir davranis, cunku
-   % bir deneme ancak butun metotlar ayni patlama gerceklemesini gordugunde
-   % karsilastirilabilir. Ama arp yayinlanmis parametresi olmayan uzunlukta
-   % bilerek hata dondurdugu icin - ve arp blogu S blogundan ONCE geldigi icin
-   % - arp'i ortak izgarada kosmak her denemede S'i de dusururdu.
-   % Cozum dosyayi kurcalamak degil, arp'i kendi uzunluklarinda ayri kosmak.
+   % The blocks in interleave_all_pc are guarded by an "&& (erM == "")"
+   % chain: once one method fails, none of the later ones runs at all. That
+   % is the CORRECT behaviour, because a trial is comparable only when every
+   % method has seen the same burst realization. But arp returns an error by
+   % design at any length where its parameters are not published - and the
+   % arp block comes BEFORE the S block - so running arp on the common grid
+   % would take S down with it in every trial. The answer is not to meddle
+   % with the chain but to run arp separately, at its own lengths.
    %
-   % Asagidaki sekiz K, 802.16 tablosunun 15'in kati olan sekiz satirina
-   % karsilik gelir: L = 120 180 240 480 960 1440 1920 2400.
+   % The eight K below are the eight rows of the 802.16 table that are
+   % multiples of 15, giving L = 120 180 240 480 960 1440 1920 2400.
 
-   gridMode = 'common';    % <-- SADECE BURAYI DEGISTIRIN
+   gridMode = 'common';    % <-- CHANGE THIS LINE AND NOTHING ELSE
 
    global TS_GRID_MODE %#ok<GVMIS>
    if ~isempty(TS_GRID_MODE), gridMode = TS_GRID_MODE; end
@@ -278,25 +288,27 @@ function [config, params] = configure_simulation()
          params.intMethods = config.allIntMethods(~strcmp(config.allIntMethods, 'arp'));
       case 'standards'
          config.sizeList   = [72 108 144 288 576 864 1152 1440];
-         params.intMethods = config.allIntMethods;  % arp dahil
+         params.intMethods = config.allIntMethods;  % arp included
       case 'legacy'
          config.sizeList   = [];                    % sizeMin:sizeStep:sizeMax
          params.intMethods = config.allIntMethods;
       otherwise
-         error('configure_simulation: bilinmeyen gridMode "%s"', gridMode);
+         error('configure_simulation: unknown gridMode "%s"', gridMode);
    end
-   config.gridMode = gridMode;   % kayitlarda da dursun
+   config.gridMode = gridMode;   % kept on the record as well
 
-   % sizeMin/sizeMax'i listeyle tutarli tut: estimate_sweep_time ve bazi
-   % basliklar hala bu ikisini okuyor, ve listeyle celisen degerler yaniltir.
+   % Keep sizeMin/sizeMax consistent with the list: estimate_sweep_time and
+   % some banners still read those two, and values that contradict the list
+   % mislead.
    if ~isempty(config.sizeList)
       config.sizeMin = min(config.sizeList);
       config.sizeMax = max(config.sizeList);
    end
 
-   % ---- DUMAN TESTI (v2) ---------------------------------------------------
-   % global TS_SMOKE = true yapilirsa: 2 kosu, 4 uzunluk, ayri klasor. Tam
-   % kampanyadan once zinciri uc uca denemek icin; sonuclari analizde KULLANMAYIN.
+   % ---- SMOKE TEST ---------------------------------------------------------
+   % With the global TS_SMOKE = true: 2 runs, 4 lengths, a folder of its own.
+   % For exercising the chain end to end before a full campaign; DO NOT use
+   % its results in any analysis.
    global TS_SMOKE %#ok<GVMIS>
    if ~isempty(TS_SMOKE) && TS_SMOKE
       config.testRunsMax = 2;
@@ -311,14 +323,14 @@ function [config, params] = configure_simulation()
    end
 
    % % % % % --- Simulation Overrides (uncomment below For Quick Test) ---
-   % KAPALI - tam kosu icin. Acmadan once sunu bilin: bu blok IZGARA
-   % SECICISINDEN SONRA calisir, yani buradaki her satir yukaridaki secimi
-   % ezer. Ozellikle params.intMethods satirini acmayin: izgara secici
-   % 'common' modunda arp'i listeden bilerek cikariyor, ve arp'i geri
-   % koymak her denemede S'i de dusurur (interleave_all_pc'de arp blogu S
-   % blogundan once ve zincir "&& (erM == "")" ile korunuyor).
-   % config.sizeMin / config.sizeMax satirlarini da acmayin - sizeList ile
-   % celisirler.
+   % OFF - this is a full run. Before uncommenting any of it, know that this
+   % block executes AFTER the grid selector, so every line here overrides the
+   % choice made above. In particular do not uncomment the params.intMethods
+   % line: in 'common' mode the grid selector removes arp from the list on
+   % purpose, and putting arp back takes S down in every trial as well (in
+   % interleave_all_pc the arp block comes before the S block, and the chain
+   % is guarded by "&& (erM == "")"). Do not uncomment the config.sizeMin /
+   % config.sizeMax lines either - they contradict sizeList.
    %
 %       config.testRunsMax = 5;
 %    %    config.dataGenTryMax = 15;

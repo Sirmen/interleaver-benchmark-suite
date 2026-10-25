@@ -3,7 +3,7 @@
   "upload_type": "software",
   "description": "MATLAB implementation of the interleaver evaluation suite of 'Code-Aware Interleaver Metrics for Burst-Error Channels: Taxonomy and Validation on a Provenance-Governed Benchmark': canonical interleaver implementations with declared parameter rules, the length-grid generator, precomputed permutation tables, the metric implementations, the simulation harness and the analysis scripts that regenerate every table and figure. The campaign data are archived separately (see related identifiers).",
   "creators": [
-    {"name": "Sirmen, R. Tanju", "affiliation": "Piri Reis University", "orcid": "0000-0001-5014-4780"}
+    {"name": "Sirmen, Refik Tanju", "affiliation": "Piri Reis University", "orcid": "0000-0001-5014-4780"}
   ],
   "license": "MIT",
   "keywords": ["interleaver design", "burst-error mitigation", "forward error correction", "Reed-Solomon codes", "Gilbert-Elliott channel", "design-time evaluation metrics", "reproducible research", "benchmarking", "MATLAB"],

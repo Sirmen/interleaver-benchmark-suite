@@ -3,11 +3,11 @@ function R = validation_supplement(dataPath, opts)
 %
 %   R = validation_supplement(dataPath, struct('tableDir', tableDir))
 %
-% Recomputes the within-length (method, length) cell correlation of Table IX
+% Recomputes the within-length (method, length) cell correlation of Table 8
 % for the five design-time load statistics, under six readings of the same
 % campaign:
 %
-%   base     in-scope field, target RES            (= Table IX)
+%   base     in-scope field, target RES            (= Table 8)
 %   CR       in-scope field, target CR alone        (no rate term, no z-score)
 %   nonext   in-scope, the five frame-extending methods removed. BE = 1 for
 %            every remaining row, so within a condition RES is an increasing
@@ -22,22 +22,22 @@ function R = validation_supplement(dataPath, opts)
 % correlation_data files (pub_supplement.py); this file adds the design-time
 % ones, which need the permutations. delta_G and eta_ES are recomputed here
 % as well - all fourteen, so this one file reproduces every number of the
-% Section VIII-G paragraph; their "base" column must reproduce Table IX
+% Section 8.7 paragraph; their "base" column must reproduce Table 8
 % (delta_G 0.909, eta_ES 0.913, ...), which checks the whole pipeline.
 %
 % Mean load per codeword = n * E / encodedLen, with E = noiseActual *
 % interleavedLen the corrupted-symbol count shared by all methods of a trial.
 %
-% Uses designMetricScore (exhaustive giniLoad, v26). Design statistics are
+% Uses designMetricScore (exhaustive giniLoad). Design statistics are
 % cached by (method, N): the permutation does not depend on the regime.
 %
-% R. T. Sirmen harness, 2026-09 (v26 revision)
+% R. T. Sirmen harness, 2026-09
 
    if nargin < 2, opts = struct(); end
    dataPath = char(dataPath);
    n = local_opt(opts, 'FECn', 15);
    t = local_opt(opts, 'FECt', 3);
-   minN = local_opt(opts, 'minN', 24 * n);          % same common support as Table IX
+   minN = local_opt(opts, 'minN', 24 * n);          % same common support as Table 8
    theta = local_opt(opts, 'threshold', 0.30);
    nDraw = local_opt(opts, 'nDraw', 15);
    OUTS = {'freqDeterm', 'freqRandom'};
@@ -45,7 +45,7 @@ function R = validation_supplement(dataPath, opts)
    ENSEMBLE = {'random', 'freqRandom'};
    DES = {'giniLoad', 12; 'meanMaxCW', 24; 'maxErrCW', 24; 'overT', 12; 'cvLoad', 24; 'giniLoad', 8};
    PUBREF = {'eta_ES', 'delta_G', 'S_ECC', 'delta_BS', 'eta_sep', 'laplacianEnergy', 'U_ECC', ...
-             'sepMin', 'adjCV', 'PSR', 'V_ECC', 'adjMin', 'S_sf', 'S_factor'};   % Table IX order
+             'sepMin', 'adjCV', 'PSR', 'V_ECC', 'adjMin', 'S_sf', 'S_factor'};   % Table 8 order
 
    tableDir = local_opt(opts, 'tableDir', '');
    if isempty(tableDir) || exist(fullfile(char(tableDir), 'table_factors_precomputed.mat'), 'file') ~= 2
@@ -157,8 +157,8 @@ function R = validation_supplement(dataPath, opts)
       end
       fprintf('   [%.3f, %.3f] %d-%d\n', min(mv), max(mv), min(pv), max(pv));
    end
-   fprintf(['\n  base must reproduce Table IX for the published rows (delta_G 0.909, eta_ES 0.913);\n' ...
-            '  giniLoad (12n) may differ from 0.878 in the third decimal only, because\n' ...
+   fprintf(['\n  base must reproduce Table 8 for the published rows (delta_G 0.924, eta_ES 0.924);\n' ...
+            '  giniLoad (12n) may differ from 0.898 in the third decimal only, because\n' ...
             '  it is now exhaustive rather than subsampled.\n']);
    fprintf('  ratio giniLoad(12n)/delta_G per reading:');
    for vi = 1:numel(VAR)

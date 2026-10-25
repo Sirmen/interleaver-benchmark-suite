@@ -5,7 +5,7 @@ function R = fig1_screen(dataDir, opts)
 %
 % THE ARGUMENT THE FIGURE HAS TO CARRY
 % ===========================================================================
-% Section III-I removes two methods from scope on ONE criterion, reach, and
+% Section 3.9 removes two methods from scope on ONE criterion, reach, and
 % the objection is that the criterion was picked to remove those two. The
 % answer has two halves and the figure must show both:
 %
@@ -290,5 +290,5 @@ function R = fig1_screen(dataDir, opts)
    end
    fprintf(['  A partition whose groups lie an order of magnitude apart was not\n' ...
             '  chosen to produce the partition. If the two ranges ever meet, the\n' ...
-            '  scope argument of Section III-I fails and the figure will show it.\n\n']);
+            '  scope argument of Section 3.9 fails and the figure will show it.\n\n']);
 end

@@ -47,7 +47,7 @@ function [vectorInterleaved, permutation, Nsc, Nsym, erM] = ...
 % separate operations, clauses 6.5 and 8.5 - which is why this method and the
 % frequency interleavers are separate rows in the comparison. The cyclic
 % delay below is a declared choice of the benchmark and is labelled BD in
-% Table I on exactly that ground.
+% Table 1 on exactly that ground.
 %
 %       grid(s, t)  ->  grid(s, mod(t - s*depth, Nsym))
 %
