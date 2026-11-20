@@ -208,7 +208,7 @@ end
 function id = local_pid(f)
 % The paper's id for a check. The struct field names are B0_conditions,
 % B1_occupancy and so on, and they are health_check's returned interface, so
-% they are not renamed; Appendix B calls the same checks H0-H6, and this is
+% they are not renamed; Section S4 of the Supplementary Material calls the same checks H0-H6, and this is
 % what gets printed. 'clean' and '' pass through.
    id = f;
    if ~isempty(id) && id(1) == 'B', id(1) = 'H'; end

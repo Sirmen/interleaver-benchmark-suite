@@ -46,7 +46,7 @@ function R = screen_methods(dataDir, opts)
 %                          like P1. A confined method cannot answer the
 %                          question; a full-frame method that overloads a
 %                          codeword answered it badly. Keeping the two apart
-%                          is what makes the scope claim of Section 3.9
+%                          is what makes the scope claim of Section 3.5
 %                          something other than a way of deleting the
 %                          methods at the bottom of the table.
 %
@@ -178,12 +178,11 @@ function R = screen_methods(dataDir, opts)
    fprintf('rate-limited when the BE term carries more of the deficit than the CR term.\n');
    % The permutation each structural column is read from is built here, not
    % taken from the campaign, so the settings it is built with belong in the
-   % output beside the numbers. Only the S family reads the four strategy
-   % fields; srandom is one seeded draw, and random and freqRandom redraw on
+   % output beside the numbers. Only S reads the pairing and swap settings;
+   % srandom is one seeded draw, and random and freqRandom redraw on
    % every call, so their structural columns describe a draw, not the method.
-   fprintf(['permutations built here: seed 1, minMultiplier 2, pairStrategy balanced, ' ...
-            'swapStrategy parity,\nextension 0.5 - except S, built with the settings ' ...
-            'its file accepts and the campaign used\n(minSum, oddOnly, minMultiplier 3, ' ...
+   fprintf(['permutations built here: seed 1, minMultiplier 2, extension 0.5 - except S,\n' ...
+            'built with the settings the campaign used (minSum, oddOnly, minMultiplier 3, ' ...
             'no extension). srandom is one seeded draw; random and\nfreqRandom redraw ' ...
             'per call.\n\n']);
    fprintf('%-15s %7s %7s %7s %7s %7s %8s %8s %7s %7s  %s\n', 'method', 'meanRES', ...
@@ -295,7 +294,8 @@ function p = local_perm(m, N, tp, tf)
 % The reference interleaver must not be the one row of this table that is
 % blank. S is built from the settings the campaign ran it with, which are the
 % ones its own file accepts; the struct below is this screen's declared
-% setting for every other method and names two strategies S does not define.
+% setting for every other method, none of which reads S's pairing or swap
+% settings.
    p = [];
    if strcmpi(m, 'S')
       pS = struct('permutationSeed', 2106, 'minMultiplier', 3, ...
@@ -309,10 +309,10 @@ function p = local_perm(m, N, tp, tf)
          fprintf(2, '  S at N = %d: %s\n', N, e.message);
          p = [];
       end
+      return   % S is built with its campaign settings or not at all
    end
    try
       paramsInt = struct('permutationSeed', 1, 'minMultiplier', 2, ...
-                         'pairStrategy', 'balanced', 'swapStrategy', 'parity', ...
                          'extensionPercentage', 0.5);
       [~, p, ~, ~, ~, ~, erM] = interleaver_generic_pc(1:N, m, 0, 0.5, [], 1, tp, tf, paramsInt);
       % An empty permutation with a message is a failure, not an absence.

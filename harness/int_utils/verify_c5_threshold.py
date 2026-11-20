@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce Table 8's |rho|, pass and IQR columns, then sweep the C5 threshold.
+"""Reproduce Table 4's |rho|, pass and IQR columns, then sweep the C5 threshold.
 
 WHY THIS EXISTS
 ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ and keeping them apart is the point:
      files, in a language the harness does not share with it.  A sweep over
      numbers that cannot be reproduced is worth nothing.
   2. It then sweeps the threshold and reports every value at which a verdict
-     in Table 8 actually changes.
+     in Table 4 actually changes.
 
 WHAT HAD TO BE GOT RIGHT
 ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ taken on the SIGNED per-length correlations within a condition, and the eight
 condition IQRs are then averaged.
 
 With both of those right, all three columns reproduce for all 14 per-trial
-metrics of Table 8, worst deviation 0.0005.
+metrics of Table 4, worst deviation 0.0005.
 
 WHAT THE SWEEP FINDS
 ---------------------------------------------------------------------------
@@ -76,9 +76,9 @@ from scipy.stats import spearmanr
 warnings.filterwarnings('ignore')
 
 DROP = {'freqDeterm', 'freqRandom'}
-MIN_N = 360                      # N > 24n, the common support of Table 8
+MIN_N = 360                      # N > 24n, the common support of Table 4
 
-# The 14 per-trial metrics of Table 8: field -> (label, published |rho|,
+# The 14 per-trial metrics of Table 4: field -> (label, published |rho|,
 # published pass count, published IQR).
 PERTRIAL = {
     'delta_G':         ('dG',        0.924, 8, 0.042),
@@ -97,7 +97,7 @@ PERTRIAL = {
     'S_factor':        ('Sfactor',   0.155, 0, 0.145),
 }
 
-# Every row of Table 8, transcribed from v98. The regrouping in later
+# Every row of Table 4 (Table 8 in manuscript v98, same values), transcribed from v98. The regrouping in later
 # versions changed the row order and the verdict wording, not the values.
 # The design-time rows have no per-trial series, so their IQR is read from the
 # table rather than recomputed here; the reproduction above is what licenses
@@ -189,7 +189,7 @@ def reproduce(data_dir):
         conds.append(rho)
         print('    %-52s %5d cells %3d lengths' % (os.path.basename(p), n_cell, n_len))
 
-    print('\n  Table 8, the three columns, recomputed from the raw files')
+    print('\n  Table 4, the three columns, recomputed from the raw files')
     print('  %-9s %7s %7s   %5s %5s   %7s %7s' %
           ('metric', 'rho', 'pub', 'pass', 'pub', 'IQR', 'pub'))
     rows, bad = [], []
@@ -251,7 +251,7 @@ def sweep(out_csv):
     lo = max(q for q in edges if q <= 0.15)
     hi = min(q for q in edges if q > 0.15)
     print('\n  The published threshold 0.15 lies in [%.3f, %.3f): no verdict in\n'
-          '  Table 8 changes anywhere in that band, %.3f from the edge below\n'
+          '  Table 4 changes anywhere in that band, %.3f from the edge below\n'
           '  and %.3f from the edge above.' % (lo, hi, 0.15 - lo, hi - 0.15))
     print('  It is also the exact midpoint of that band - a coincidence of the\n'
           '  v98 table, not a derivation: esLoad sets the lower edge and esLoad\n'

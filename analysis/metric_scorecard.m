@@ -71,7 +71,7 @@ function S = metric_scorecard(dataPath, opts)
    % the held-out B selection below does not apply to them. B_guar returns a
    % burst length rather than consuming one; the other four are functions of
    % the permutation alone. Scored here rather than only in
-   % design_metric_extension so that the scorecard, Tables 8, 11 and 13
+   % design_metric_extension so that the scorecard, Tables 4 and 5
    % and Figures 4 and 5 see the same columns.
    DET = {'B_guar','dispersion','Snew','S_ach','adjDispersion'};
 

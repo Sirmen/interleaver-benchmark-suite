@@ -1,14 +1,21 @@
-Fill these in on zenodo.org > New upload (dataset record)
+New version of the data record on zenodo.org (record 10.5281/zenodo.23136341 > "New version")
 
 Upload type:        Dataset
-Title:              Campaign data for "Reproducibility in Interleaver Benchmarking: A Validated Evaluation Suite with Metric Taxonomy and Parameter Provenance"
-Creators:           Sirmen, R. Tanju (Piri Reis University) [ORCID]
-Description:        (paste the first two paragraphs of DATA_README.md)
-Version:            1.0.0
+Title:              Interleaver benchmark suite: campaign data, primary RS(15,9) campaign and five further campaigns
+Creators:           Sirmen, Refik Tanju (Piri Reis University) [ORCID 0000-0001-5014-4780]
+Description:        the first three paragraphs of DATA_README.md (title of the article, what 2.0.0 adds,
+                    the primary campaign), then the table of further campaigns
+Version:            2.0.0
 License:            Creative Commons Attribution 4.0 International
-Keywords:           interleaving; burst-error correction; benchmarking; reproducibility; Monte Carlo
+Keywords:           interleaving; burst-error correction; Reed-Solomon codes; metric validation;
+                    parameter provenance; reproducibility; Monte Carlo
 Related identifiers:
-  - is supplement to  -> [arXiv DOI or URL of the paper]            (Publication / Preprint)
-  - is supplemented by / is referenced by -> 10.5281/zenodo.XXXXXXX (Software; the code record)
-Files:              KPItableDetailed_*.mat + .csv.gz, correlation_data_*.mat, config_*.mat, DATA_README.md
-Tip:                press "Reserve DOI" before publishing, so the DOI can go into the paper and the code first.
+  - is supplemented by -> 10.5281/zenodo.23170142           (Software; concept DOI of the code)
+  - is supplemented by -> <v1.1.0 version DOI of the code>  (Software; add after the GitHub release)
+Files:              press "Import files" (from the previous version) to carry the 79 files of 1.0.0;
+                    replace DATA_README.md; add design_cells_all_n15.csv, Supplementary_Material.pdf
+                    and campaign_code31.zip, campaign_code24.zip, campaign_c15t2.zip,
+                    campaign_c15t4.zip, campaign_c15lo.zip
+Order:              1. "New version", 2. "Reserve DOI" (do not publish), 3. give the reserved DOI and the
+                    concept DOI ("Cite all versions") so they go into README, CITATION.cff and
+                    .zenodo.json before the code is tagged, 4. upload files, 5. publish.

@@ -54,6 +54,11 @@ function [config, params] = configure_simulation()
    config.FECp = fecConfig.p;                   % Parity symbols
    config.FECt_correct = fecConfig.t_correct;   % Correctable symbols per codeword
    config.FECoverhead = fecConfig.overhead;     % Fractional overhead
+   % SHORTENED CODEWORD LENGTH, [] for the natural 2^m - 1 code. A grid mode
+   % that wants a shortened code sets it and recomputes the FEC block; the
+   % verification after the switch reads it, so a mode cannot set it and
+   % forget to recompute.
+   config.FECnShort = [];
    
    % Simulation parameters
    % FULL RUN. 35 gives 35 independent observations per (method, length,
@@ -68,8 +73,13 @@ function [config, params] = configure_simulation()
    % burst noise parameters
    config.singleBurst = true; %  false;
    config.noiseTryMax = 60;
+   % THE BAND AS MULTIPLES OF tau = t/n, declared once. Every grid mode uses
+   % [0.90 1.34] except the low-band modes 'c15loc'/'c15los', which set
+   % [0.50 0.90]; the checks after the grid selector read this field, so a
+   % mode cannot move the band without declaring it here.
+   config.bandFactor = [0.90 1.34];
    config.noisyRateMin = config.eccReal * 0.90;
-   config.noisyRateMax = config.eccReal * 1.34; 
+   config.noisyRateMax = config.eccReal * 1.34;
    config.noiseBins = 5; % set 3 for quick test
    config.noiseLevels = linspace(config.noisyRateMin, config.noisyRateMax, config.noiseBins);
    %  
@@ -162,6 +172,23 @@ function [config, params] = configure_simulation()
    config.dataSavePath = dataSavePath;
    if ~exist(char(dataSavePath), 'dir'), mkdir(char(dataSavePath)); end
 
+   % Where the further campaigns of Section 8.9 write, one folder per
+   % campaign: under SINT_CAMPAIGNS if it is set, otherwise in a campaigns
+   % folder beside the results folder (data/campaigns in this repository,
+   % which is the layout reproduce_paper reads).
+   campaignRoot = string(getenv('SINT_CAMPAIGNS'));
+   if campaignRoot == "" || ismissing(campaignRoot)
+      campaignRoot = string(fullfile(fileparts(char(dataSavePath)), 'campaigns'));
+   end
+
+   % The error VALUE at a corrupted position. 'legacy' draws it per method,
+   % as the primary campaign did (article, Section 7.4); 'shared' draws one
+   % additive error vector per trial for every method, as the further
+   % campaigns did. The primary grid modes keep 'legacy' so that they
+   % reproduce the archived campaign; the further-campaign modes set
+   % 'shared' below. See injectBurstErrors_all.
+   config.errorValueMode = 'legacy';
+
    config.saveResults = true;
 
    % PLOTTING OFF FOR THE SWEEP - ON PURPOSE, NOT AN OVERSIGHT.
@@ -243,6 +270,19 @@ function [config, params] = configure_simulation()
    %   'standards'  the standards-compliant subset, 26 methods (arp
    %                INCLUDED), 8 lengths
    %
+   % The further campaigns of Section 8.9 (see the cases below):
+   %   'code31'     the full common field on RS(31,21), 23 lengths
+   %   'code24'     the full common field on the shortened RS(24,16), 28
+   %                lengths
+   %   'c15t2c' 'c15t2s' 'c15t4c' 'c15t4s'
+   %                n = 15 with t = 2 or 4, on the common (c) or standards
+   %                (s) grid, the same encoded lengths and permutations as
+   %                'common' and 'standards'
+   %   'c15loc' 'c15los'
+   %                RS(15,9) on the common / standards grid with the density
+   %                band at [0.50 0.90]*tau instead of [0.90 1.34]*tau
+   % They are driven by the scripts in harness/campaigns (code2_run_all).
+   %
    % WHY THE 'common' GRID IS K = 36*m
    % ---------------------------------------------------------------------
    % Under RS(15,9), K = 36m is exactly 4m codewords with ZERO PADDING, and
@@ -289,6 +329,191 @@ function [config, params] = configure_simulation()
       case 'standards'
          config.sizeList   = [72 108 144 288 576 864 1152 1440];
          params.intMethods = config.allIntMethods;  % arp included
+      case 'code31'
+         % A SECOND CODE FOR THE METRIC VALIDATION, added 17 November 2026.
+         % RS(31,21) over GF(32), t = 5, derived from eccMin = 1/7 on GF(32).
+         % It carries the FULL common field: a metric is validated by how it
+         % orders METHODS.
+         %
+         % THE GRID: K = 84*j message symbols, j = 1..24 except j = 15.
+         %   84 = 4*21     four codewords, ZERO padding, encoded L = 124*j
+         %   4 | L         drp is admissible at every length (its dither
+         %                 period steps down 16 -> 8 -> 4 until one divides L)
+         %   no padding    BE = 1 for every method that does not extend
+         %   L <= 2976     the same range as the common grid (60..3000)
+         %
+         % j = 15 IS LEFT OUT ON PURPOSE. L = 1860 = 31*60 is also a length of
+         % the RS(15,9) common grid, and the permutation table is keyed by the
+         % encoded length ALONE. blockCM and convCM depend on n, so an entry
+         % built here for n = 31 would collide with the n = 15 entry the
+         % published campaign used. No other 124*j up to 2976 is a multiple of
+         % 60, so no other key is shared with the published grids, and
+         % code2_build_table refuses to merge if any shared key holds a
+         % different permutation.
+         config.base      = 32;                  % RS(31,21) over GF(32)
+         config.padSymbol = config.base - 1;     % 31, a valid GF(32) element
+         fec31 = configure_FEC_parameters(config.base, config.eccMin);
+         config.eccReal      = fec31.eccReal;        % 5/31 = 0.16129
+         config.FECn         = fec31.n;              % 31
+         config.FECk         = fec31.k;              % 21
+         config.FECp         = fec31.p;              % 10
+         config.FECt_correct = fec31.t_correct;      % 5
+         config.FECoverhead  = fec31.overhead;
+         config.noisyRateMin = config.eccReal * 0.90;
+         config.noisyRateMax = config.eccReal * 1.34;
+         config.sizeList     = 84 * setdiff(1:24, 15);
+
+         % NO EXTRA TABLE LENGTHS. The union list set near the top of this
+         % file is for RS(15,9); building it here would build blockCM and
+         % convCM at those lengths for n = 31.
+         config.encodedLengthList = [];
+
+         % The common field: every method except arp, which has published
+         % parameters at none of these lengths and would abort every trial
+         % (the && (erM == "") chain in interleave_all_pc).
+         params.intMethods = config.allIntMethods(~strcmp(config.allIntMethods, 'arp'));
+
+         config.saveRawResults = false;      % no results_*.mat (18 Nov 2026: disk)
+         config.errorValueMode = 'shared';   % one error vector per trial (Section 8.9)
+         config.dataSavePath = string(fullfile(char(campaignRoot), 'code31'));
+         if ~exist(char(config.dataSavePath), 'dir')
+            mkdir(char(config.dataSavePath));
+         end
+
+      case 'code24'
+         % A THIRD CODE FOR THE METRIC VALIDATION, added 17 November 2026.
+         % RS(24,16): RS(31,23) over GF(32) shortened by 7, t = 4. Against
+         % RS(15,9) and RS(31,21) it changes the PARITY of n (even), the
+         % construction (shortened) and t (4). The full common field, as in
+         % 'code31'.
+         %
+         % THE GRID: K = 16*c message symbols, c codewords, ZERO padding,
+         % encoded L = 24*c, 28 values of c from 6 to 123 (L = 144..2952), 23
+         % of them above the common support N > 24n = 576. 8 | L, so drp is
+         % admissible everywhere. c is NOT an arithmetic progression: every
+         % value is chosen so that L shares no key of the permutation table
+         % with another code's grid, because the table is keyed by L alone and
+         % blockCM / convCM depend on n:
+         %   c not a multiple of 5        L not a multiple of 60 (RS(15,9) grids)
+         %   no c = 0 (mod 4), 24..96     L not in 576:96:2304 (the RS(15,9)
+         %                                union list of encodedLengthList)
+         %   c not a multiple of 31       L not a multiple of 124 ('code31')
+         % code2_build_table refuses to merge if any shared key still holds a
+         % different permutation.
+         config.base      = 32;          % GF(32), mother RS(31,23)
+         config.FECnShort = 24;
+         config.eccMin    = 0.15;        % -> t = 4 at n = 24
+         config.padSymbol = config.base - 1;
+         fecS = configure_FEC_parameters(config.base, config.eccMin, config.FECnShort);
+         config.eccReal      = fecS.eccReal;         % 4/24 = 0.16667
+         config.FECn         = fecS.n;               % 24
+         config.FECk         = fecS.k;               % 16
+         config.FECp         = fecS.p;
+         config.FECt_correct = fecS.t_correct;       % 4
+         config.FECoverhead  = fecS.overhead;
+         config.noisyRateMin = config.eccReal * 0.90;
+         config.noisyRateMax = config.eccReal * 1.34;
+         c24 = [6 11 14 19 23 27 33 37 41 46 49 54 58 63 67 71 74 79 83 89 ...
+                94 97 101 106 109 114 119 123];
+         config.sizeList          = 16 * c24;
+         config.encodedLengthList = [];
+         params.intMethods = config.allIntMethods(~strcmp(config.allIntMethods, 'arp'));
+         config.saveRawResults = false;      % no results_*.mat (18 Nov 2026: disk)
+         config.errorValueMode = 'shared';   % one error vector per trial (Section 8.9)
+         config.dataSavePath = string(fullfile(char(campaignRoot), 'code24'));
+         if ~exist(char(config.dataSavePath), 'dir')
+            mkdir(char(config.dataSavePath));
+         end
+
+      case {'c15t2c', 'c15t2s', 'c15t4c', 'c15t4s'}
+         % n = 15 HELD FIXED, t CHANGED, added 17 November 2026: the codes of
+         % the metric validation so far change n and t together (RS(15,9),
+         % RS(31,21), RS(24,16)), so a verdict that moves cannot be laid on
+         % either. Here n stays 15 and only t moves, to 2 (RS(15,11)) and to
+         % 4 (RS(15,7)), on both published grids.
+         %
+         %   c15t2c / c15t4c   the 'common' grid, 25 methods (arp excluded)
+         %   c15t2s / c15t4s   the 'standards' grid, 26 methods (arp included)
+         %
+         % THE SAME ENCODED LENGTHS AS THE PUBLISHED CAMPAIGN. The message is
+         % 4*k symbols per four codewords (44 at t = 2, 28 at t = 4), so the
+         % common grid is again L = 60m and the standards grid again the eight
+         % 802.16 rows L = 120 ... 2400, with zero padding. The permutation
+         % table is keyed by L, and no method of the field reads t , so every permutation is the one
+         % the published RS(15,9) campaign used: NOTHING is built for these
+         % modes, and code2_check_table verifies the keys instead.
+         %
+         % base stays 10, as for RS(15,9): the same message alphabet and the
+         % same padSymbol 9, so the only thing that differs from the published
+         % campaign is the code.
+         %
+         % eccMin IS CHOSEN AWAY FROM A BOUNDARY. t = ceil(15*eccMin), and
+         % 15*(2/15) may land a hair above 2 in binary (see the note in
+         % configure_FEC_parameters), so 0.13 (15*0.13 = 1.95 -> t = 2) and
+         % 0.25 (3.75 -> t = 4) are used, never 2/15 or 4/15. The checks after
+         % the switch re-derive the code from eccMin and rebuild the band.
+         c15t = str2double(gridMode(5));
+         if c15t == 2, config.eccMin = 0.13; else, config.eccMin = 0.25; end
+         fec15 = configure_FEC_parameters(config.base, config.eccMin);
+         if fec15.n ~= 15 || fec15.t_correct ~= c15t
+            error('configure_simulation: %s derived RS(%d,%d) t=%d, expected n = 15, t = %d.', ...
+                  gridMode, fec15.n, fec15.k, fec15.t_correct, c15t);
+         end
+         config.eccReal      = fec15.eccReal;        % 2/15 = 0.1333 or 4/15 = 0.2667
+         config.FECn         = fec15.n;              % 15
+         config.FECk         = fec15.k;              % 11 or 7
+         config.FECp         = fec15.p;
+         config.FECt_correct = fec15.t_correct;      % 2 or 4
+         config.FECoverhead  = fec15.overhead;
+         config.noisyRateMin = config.eccReal * 0.90;
+         config.noisyRateMax = config.eccReal * 1.34;
+         if gridMode(end) == 'c'
+            config.sizeList   = 4 * fec15.k * (1:50);                      % L = 60m, as 'common'
+            params.intMethods = config.allIntMethods(~strcmp(config.allIntMethods, 'arp'));
+         else
+            config.sizeList   = fec15.k * [8 12 16 32 64 96 128 160];      % L as 'standards'
+            params.intMethods = config.allIntMethods;                      % arp included
+         end
+         config.encodedLengthList = [];      % nothing is built in these modes
+         % No results_*.mat: 9-11 GB per common-grid sweep, read by no analysis
+         % step; the first c15t2 run filled the disk writing it (18 Nov 2026).
+         config.saveRawResults = false;
+         config.errorValueMode = 'shared';   % one error vector per trial (Section 8.9)
+         config.dataSavePath = string(fullfile(char(campaignRoot), sprintf('c15t%d', c15t)));
+         if ~exist(char(config.dataSavePath), 'dir')
+            mkdir(char(config.dataSavePath));
+         end
+
+      case {'c15loc', 'c15los'}
+         % BELOW CAPACITY, added 18 November 2026. The published RS(15,9)
+         % configuration exactly - base 10, eccMin 1/7, the 'common' and
+         % 'standards' grids and their fields, so the same permutations - with
+         % the density band moved from [0.90 1.34]*tau to [0.50 0.90]*tau:
+         % mean load per codeword n*nu = 1.5 to 2.7 against t = 3, the
+         % guarantee side of t that the published band reaches only at its
+         % lowest bin. Table 7 lists the burst scale as an attribute whose
+         % change requires the verdicts to be re-measured; this measures it.
+         config.bandFactor   = [0.50 0.90];
+         config.noisyRateMin = config.eccReal * config.bandFactor(1);   % 0.100
+         config.noisyRateMax = config.eccReal * config.bandFactor(2);   % 0.180
+         if config.FECn ~= 15 || config.FECt_correct ~= 3
+            error('configure_simulation: %s expects the default RS(15,9).', gridMode);
+         end
+         if gridMode(end) == 'c'
+            config.sizeList   = 36 * (1:50);                               % as 'common'
+            params.intMethods = config.allIntMethods(~strcmp(config.allIntMethods, 'arp'));
+         else
+            config.sizeList   = [72 108 144 288 576 864 1152 1440];        % as 'standards'
+            params.intMethods = config.allIntMethods;                      % arp included
+         end
+         config.encodedLengthList = [];
+         config.saveRawResults = false;
+         config.errorValueMode = 'shared';   % one error vector per trial (Section 8.9)
+         config.dataSavePath = string(fullfile(char(campaignRoot), 'c15lo'));
+         if ~exist(char(config.dataSavePath), 'dir')
+            mkdir(char(config.dataSavePath));
+         end
+
       case 'legacy'
          config.sizeList   = [];                    % sizeMin:sizeStep:sizeMax
          params.intMethods = config.allIntMethods;
@@ -296,6 +521,70 @@ function [config, params] = configure_simulation()
          error('configure_simulation: unknown gridMode "%s"', gridMode);
    end
    config.gridMode = gridMode;   % kept on the record as well
+
+   % ---- REBUILD EVERYTHING DERIVED FROM THE BAND, AFTER THE SWITCH ---------
+   % config.noiseLevels is built near the top of this file from the band that
+   % existed THEN. A grid mode that changes config.base changes eccReal and
+   % therefore the band, and the array built earlier is stale from that moment
+   % on - but nothing reads the band at run time, so nothing notices:
+   % run_simulations_sci reads config.noiseLevels and only that. A test run
+   % at RS(31,21) once drew its bursts from the RS(15,9) levels this way, a
+   % top of band 1.24 times too high, and was discarded.
+   %
+   % The verification below checks the array the simulation READS, not only
+   % the fields the switch SETS. The array is
+   % now rebuilt here, unconditionally, from the final band: for every mode
+   % that does not touch base this reproduces the same values exactly, so it
+   % is free, and no future mode can get it wrong by forgetting a line.
+   config.noiseLevels = linspace(config.noisyRateMin, config.noisyRateMax, ...
+                                 config.noiseBins);
+
+   % ---- THE CODE PARAMETERS MUST STILL AGREE WITH THE CODE -----------------
+   % A grid mode is allowed to change config.base, and 'code31' does. Every
+   % quantity derived from it then has to be recomputed, and a recompute that
+   % misses a field produces a campaign that runs, reports numbers, and scores
+   % bursts against the wrong code. Nothing downstream would object: the noise
+   % band would simply be set for a code that is not being used.
+   %
+   % So the derivation is checked here against the same function, after the
+   % switch, whatever the mode. This is cheap and it closes the one hole the
+   % "derive, never re-enter" rule cannot close by itself - a derivation that
+   % was correct when written and went stale when something above it moved.
+   fecChk = configure_FEC_parameters(config.base, config.eccMin, config.FECnShort);
+   if config.FECn ~= fecChk.n || config.FECk ~= fecChk.k || ...
+      config.FECt_correct ~= fecChk.t_correct || ...
+      abs(config.eccReal - fecChk.eccReal) > 1e-12
+      error(['configure_simulation: gridMode "%s" left the FEC fields out of ' ...
+             'step with base = %d, eccMin = %.6g. Config says RS(%d,%d) t=%d ' ...
+             'eccReal=%.6g; the code says RS(%d,%d) t=%d eccReal=%.6g. ' ...
+             'A mode that changes base must recompute every FEC field.'], ...
+             gridMode, config.base, config.eccMin, ...
+             config.FECn, config.FECk, config.FECt_correct, config.eccReal, ...
+             fecChk.n, fecChk.k, fecChk.t_correct, fecChk.eccReal);
+   end
+   bfC = config.bandFactor;
+   if abs(config.noisyRateMin - config.eccReal*bfC(1)) > 1e-12 || ...
+      abs(config.noisyRateMax - config.eccReal*bfC(2)) > 1e-12
+      error(['configure_simulation: gridMode "%s" left the noise band on the ' ...
+             'old eccReal. Band is [%.6g %.6g]; eccReal = %.6g wants ' ...
+             '[%.6g %.6g]. The burst lengths would be drawn for a different ' ...
+             'code than the one being decoded.'], ...
+             gridMode, config.noisyRateMin, config.noisyRateMax, config.eccReal, ...
+             config.eccReal*bfC(1), config.eccReal*bfC(2));
+   end
+   % And the array the simulation actually reads, which is the thing that
+   % matters and the thing the check above was missing.
+   if numel(config.noiseLevels) ~= config.noiseBins || ...
+      abs(config.noiseLevels(1)   - config.eccReal*bfC(1)) > 1e-12 || ...
+      abs(config.noiseLevels(end) - config.eccReal*bfC(2)) > 1e-12
+      error(['configure_simulation: config.noiseLevels does not match the code. ' ...
+             'Levels run [%.6g .. %.6g] over %d bins; eccReal = %.6g (RS(%d,%d)) ' ...
+             'wants [%.6g .. %.6g] over %d. Bursts would be drawn for a ' ...
+             'different code than the one being encoded.'], ...
+             config.noiseLevels(1), config.noiseLevels(end), numel(config.noiseLevels), ...
+             config.eccReal, config.FECn, config.FECk, ...
+             config.eccReal*bfC(1), config.eccReal*bfC(2), config.noiseBins);
+   end
 
    % Keep sizeMin/sizeMax consistent with the list: estimate_sweep_time and
    % some banners still read those two, and values that contradict the list

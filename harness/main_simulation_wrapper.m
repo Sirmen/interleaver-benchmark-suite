@@ -151,8 +151,8 @@
 %  plot_anova_results  plot_correlation_results  formatMetricNames
 %                                                   (all -> savePlot.m)
 %
-% These are the campaign's own diagnostic plots. The seven figures of the
-% paper are produced by analysis/, not from here.
+% These are the campaign's own diagnostic plots. The figures of the
+% article are produced by analysis/, not from here.
 %
 % =========================================================================
 
@@ -248,7 +248,17 @@ try
 
    %% 8. Save results, if configured
    if config.saveResults
-      save_results(config, results, params, paramsInt, config, burstConfig, anovaResults, correlation_data, crossCorrResults, KPItableDetailed);
+      % config.saveRawResults = false leaves out results_*.mat, the raw
+      % stats_all struct (9-11 GB per common-grid sweep). Nothing in the
+      % analysis reads it: health_check, restandardize_scope, metric_scorecard
+      % and validation_supplement work on KPItableDetailed and
+      % correlation_data. Absent or true: unchanged.
+      if isfield(config, 'saveRawResults') && ~config.saveRawResults
+         fprintf('\n(saveRawResults = false: results_*.mat not written)');
+         save_results(config, params, paramsInt, config, burstConfig, anovaResults, correlation_data, crossCorrResults, KPItableDetailed);
+      else
+         save_results(config, results, params, paramsInt, config, burstConfig, anovaResults, correlation_data, crossCorrResults, KPItableDetailed);
+      end
          saveCrossCorrelationResults(crossCorrResults, config)
 
       % --- did it actually land on disk? (own try/catch so a hiccup here is

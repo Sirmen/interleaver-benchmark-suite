@@ -162,9 +162,24 @@ function p = local_perm(m, N, cfg)
    else
       fprintf(2, 'no precomputed tables found; some methods may not build\n');
    end
+   % S is built from the settings the campaign ran it with, as in
+   % screen_methods; the generic struct below is for every other method.
+   if strcmpi(m, 'S')
+      pS = struct('permutationSeed', 2106, 'minMultiplier', 3, ...
+                  'pairStrategy', "minSum", 'swapStrategy', "oddOnly", ...
+                  'extensionPercentage', 0);
+      try
+         [~, p, ~, ~, ~, ~, erS] = interleaver_generic_pc(1:N, 'S', 0, 0.5, [], 1, tp, tf, pS);
+         if erS ~= "", fprintf(2, '  S at N = %d: %s\n', N, char(erS)); end
+         if numel(p) ~= N, p = []; end
+      catch e
+         fprintf(2, '  S at N = %d: %s\n', N, e.message);
+         p = [];
+      end
+      return
+   end
    try
       paramsInt = struct('permutationSeed', 1, 'minMultiplier', 2, ...
-                         'pairStrategy', 'balanced', 'swapStrategy', 'parity', ...
                          'extensionPercentage', 0.5);
       [~, p] = interleaver_generic_pc(1:N, m, 0, 0.5, [], 1, tp, tf, paramsInt);
    catch ME

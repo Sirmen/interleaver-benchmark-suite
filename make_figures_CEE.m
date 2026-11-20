@@ -1,5 +1,6 @@
 function make_figures_CEE(dataDir, outDir)
-%MAKE_FIGURES_CEE  Regenerate the seven manuscript figures for the C&EE submission.
+%MAKE_FIGURES_CEE  Regenerate the article's six figures and their upload copies.
+%   (The name is kept from release 1.0.x.)
 %
 %   make_figures_CEE                                   % uses the defaults below
 %   make_figures_CEE('<resultsDir>', '<outDir>')
@@ -9,7 +10,7 @@ function make_figures_CEE(dataDir, outDir)
 %    setenv('PAPER_DATA_DIR', 'D:\somewhere\results_v2')
 %
 % Apply the EPS patch to fig_style.m first (fig_style_eps.patch.txt); without
-% it this still writes the cropped vector PDF, which Elsevier also accepts.
+% it this still writes the cropped vector PDF, which most publishers accept.
 %
 % Run it from the repository root, after setup_paths.
 %
@@ -60,16 +61,22 @@ function make_figures_CEE(dataDir, outDir)
    fprintf('\n== figure 3\n');  fig_cnn_justification(dataDir, opts3);
    fprintf('\n== figure 4\n');  fig4_bsweep(S, opts);
    fprintf('\n== figure 5\n');  fig5_c5box(S, opts);
-   fprintf('\n== figure 6\n');  fig6_resdecomp(dataDir, opts);
-   fprintf('\n== figure 7\n');  fig7_bracket(opts);
+   fprintf('\n== figure 6\n');  fig7_bracket(opts);
+   % The RES decomposition of Section 10.2 is reported in the text and has
+   % no figure; reproduce_paper prints its table.
 
-   % Upload names. Elsevier asks for one file per figure, numbered as the text
+   % Upload names. A journal asks for one file per figure, numbered as the text
    % numbers them, so the stems are copied rather than renamed: the repository
-   % keeps its own names and the submission gets Figure_1 ... Figure_7.
+   % keeps its own names and the submission gets Figure_1 ... Figure_6.
    stems = {'fig1_screen', 'fig2_taxonomy', 'fig3_cnn', 'fig4_bsweep', ...
-            'fig5_c5box', 'fig6_resdecomp', 'fig7_bracket'};
+            'fig5_c5box', 'fig7_bracket'};
    upDir = fullfile(outDir, 'upload');
    if exist(upDir, 'dir') ~= 7, mkdir(upDir); end
+   % Clear the old upload set first. Release 1.0.x wrote Figure_1 ... Figure_7,
+   % and a Figure_7 or an old Figure_6 left beside the new set would be sent
+   % with it.
+   old = dir(fullfile(upDir, 'Figure_*.*'));
+   for i = 1:numel(old), delete(fullfile(upDir, old(i).name)); end
 
    fprintf('\n== upload set\n');
    missing = {};
@@ -87,7 +94,7 @@ function make_figures_CEE(dataDir, outDir)
    end
 
    if isempty(missing)
-      fprintf('\n  seven figures written to %s\n', upDir);
+      fprintf('\n  six figures written to %s\n', upDir);
    else
       fprintf(2, '\n  NO FILE for: %s\n', strjoin(missing, ', '));
    end

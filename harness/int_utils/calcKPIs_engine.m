@@ -44,6 +44,16 @@ try
    KPIdetailedTable.encodedLen = statsTable.encodedLen;
    KPIdetailedTable.interleavedLen = statsTable.interleavedLen;
    KPIdetailedTable.noiseActual = statsTable.noiseActual;
+   % THE GRID EACH METHOD USED, carried into the KPI table from 6 November
+   % 2026. Guarded, because every results file written before that date has no
+   % such column and must still load. With it, an analysis reads the grid from
+   % the run instead of recomputing it by calling the interleaver again.
+   if ismember('gridL', statsTable.Properties.VariableNames)
+      KPIdetailedTable.gridL = statsTable.gridL;
+   end
+   if ismember('gridK', statsTable.Properties.VariableNames)
+      KPIdetailedTable.gridK = statsTable.gridK;
+   end
    KPIdetailedTable.decodeErrRate = statsTable.decodeErrRate;
    KPIdetailedTable.decErrRate_woInt = statsTable.decErrRate_woInt;
     

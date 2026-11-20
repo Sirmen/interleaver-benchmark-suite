@@ -1,37 +1,85 @@
-function fecConfig = configure_FEC_parameters(base, eccMin)
-% Returns Forward Error Correction Coding parameters 
-%  (independent of interleaver block size)
+function fecConfig = configure_FEC_parameters(base, eccMin, nShort)
+%CONFIGURE_FEC_PARAMETERS  Forward error correction parameters for the sweep.
+%   Independent of the interleaver block size.
 %
-% Standard RS code configuration
+%   fecConfig = configure_FEC_parameters(base, eccMin)
+%   fecConfig = configure_FEC_parameters(base, eccMin, nShort)
+%
+%   nShort  OPTIONAL. Deliver a SHORTENED code of this codeword length. Omit
+%           it and every returned field is exactly what it was before.
+%
 % Common RS codes:
-%   RS(7,5):   n=7, k=5, t=1   (1/7 = 14.2857..% overhead, corrects 1 symbol)
-%   RS(15,11): n=15, k=11, t=2 (27% overhead, corrects 2 symbols)
-%   RS(31,25): n=31, k=25, t=3 (24% overhead, corrects 3 symbols)
-%   RS(255,223): n=255, k=223, t=16 (14% overhead, corrects 16 symbols)
+%   RS(7,5):     n=7,   k=5,   t=1
+%   RS(15,11):   n=15,  k=11,  t=2
+%   RS(31,25):   n=31,  k=25,  t=3
+%   RS(255,223): n=255, k=223, t=16
+%
+% WHY THE MOTHER CODE IS RETURNED AS WELL
+% ---------------------------------------------------------------------------
+% A shortened code is transmitted as n symbols but ENCODED by the mother code
+% RS(nFull, kFull) with kFull - k message symbols held at zero. comm.RSEncoder
+% and comm.RSDecoder want the mother code's lengths plus ShortMessageLength,
+% so the codec layer needs nFull and kFull and cannot derive them from n and k
+% alone. They are carried here rather than recomputed in three places.
+%
+% PASS eccMin TO THE CODEC, NOT eccReal
+% ---------------------------------------------------------------------------
+% The sweep used to hand config.eccReal to encoderRS_CW and decoderRS_CW,
+% which then recomputed t = ceil(n * eccReal) from it. That works only while
+% the function is idempotent on its own output, and for n = 2^m - 1 it is:
+% checked over all 4083 valid (n,t) pairs for m = 2..12 with no failure.
+%
+% IT IS NOT GENERALLY TRUE. Over shortened lengths the same check fails for
+% 439 of 21328 (n,t) pairs - n = 25, 41, 43, 50, 51, 58, 70, 75 and others -
+% because t/n rounds in binary and n*(t/n) can land a hair above t, which
+% ceil then lifts to t+1. The encoder and decoder would build DIFFERENT codes
+% and nothing would say so.
+%
+% The shortened lengths this study uses, 12 and 24, happen to be safe. Relying
+% on that would be relying on an accident, so the sweep now passes eccMin to
+% both sides and neither re-derives from a derived quantity. For every code
+% run before 6 November 2026 this changes nothing, because there eccMin and
+% eccReal produce the same t.
+%
+% R.T. Sirmen, 2026-11-06
 
-   % Default: RS(7,5) - commonly used for burst error correction
-   % fecConfig.n = 7;        % Codeword length (symbols)
-   % fecConfig.k = 5;        % Message length (symbols)
-   [ k, n, infoCapacity, eccReal ] = calcParametersRS( base, eccMin );
-   fecConfig.n = n;        % Codeword length (symbols)
-   fecConfig.k = k;        % Message length (symbols)
-   
-   fecConfig.p = fecConfig.n - fecConfig.k;  % Parity symbols
-   fecConfig.t_correct = floor(fecConfig.p / 2);  % Correctable symbols per codeword
-   
-   % fecConfig.eccReal = fecConfig.t_correct / fecConfig.n; % Err correction capability (e.g., 1/7 = 14.29%)
-   fecConfig.eccReal = eccReal; % Err correction capability (e.g., 1/7 = 14.29%)
-   
-   % fecConfig.IR = fecConfig.k / fecConfig.n; % Information Rate
-   fecConfig.IR = infoCapacity; % Information Rate
-   fecConfig.overhead = fecConfig.p / fecConfig.k;  % Fractional overhead
+   if nargin < 3, nShort = []; end
+
+   [k, n, infoCapacity, eccReal, codeInfo] = calcParametersRS(base, eccMin, nShort);
+
+   fecConfig.n = n;        % codeword length actually transmitted (symbols)
+   fecConfig.k = k;        % message length actually carried (symbols)
+
+   fecConfig.p = fecConfig.n - fecConfig.k;        % parity symbols
+   fecConfig.t_correct = floor(fecConfig.p / 2);   % correctable symbols per CW
+
+   fecConfig.eccReal = eccReal;        % t/n, the delivered correction fraction
+   fecConfig.IR = infoCapacity;        % k/n, the information rate
+   fecConfig.overhead = fecConfig.p / fecConfig.k;
+
+   % --- THE MOTHER CODE, for the codec layer ---------------------------
+   fecConfig.nFull       = codeInfo.nFull;
+   fecConfig.kFull       = codeInfo.kFull;
+   fecConfig.shortenBy   = codeInfo.shortenBy;
+   fecConfig.isShortened = codeInfo.shortenBy > 0;
+   fecConfig.m           = codeInfo.m;
 
    % --- GENERALIZED FIELDS ---
-   fecConfig.L = fecConfig.n;         % Codeword length (Block Size L)
-   fecConfig.tau = fecConfig.eccReal; % Normalized Capacity
-   
-   % Alternative configurations (uncomment to use)
-   % RS(15,11): eccConfig = struct('n',15, 'k',11, 'p',4, 't_correct',2, 'overhead',0.36);
-   % RS(31,25): eccConfig = struct('n',31, 'k',25, 'p',6, 't_correct',3, 'overhead',0.24);
-   % RS(255,223): eccConfig = struct('n',255, 'k',223, 'p',32, 't_correct',16, 'overhead',0.14);
+   fecConfig.L = fecConfig.n;         % codeword length (block size L)
+   fecConfig.tau = fecConfig.eccReal; % normalized capacity
+
+   % The parity count has to survive shortening, which removes message
+   % symbols only. If it does not, the mother code and the delivered code
+   % disagree and everything downstream is built on the wrong one.
+   if fecConfig.p ~= (codeInfo.nFull - codeInfo.kFull)
+      error(['configure_FEC_parameters: delivered RS(%d,%d) has %d parity ' ...
+             'symbols but its mother RS(%d,%d) has %d. Shortening must not ' ...
+             'change the parity count.'], n, k, fecConfig.p, ...
+             codeInfo.nFull, codeInfo.kFull, codeInfo.nFull - codeInfo.kFull);
+   end
+   if fecConfig.t_correct ~= codeInfo.t
+      error(['configure_FEC_parameters: t is %d from the delivered code and ' ...
+             '%d from the mother code. They cannot differ.'], ...
+             fecConfig.t_correct, codeInfo.t);
+   end
 end

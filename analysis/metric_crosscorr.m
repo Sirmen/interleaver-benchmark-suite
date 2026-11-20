@@ -26,12 +26,12 @@ function X = metric_crosscorr(dataDir, opts)
 % UNIT OF ANALYSIS
 % ===========================================================================
 % The (method, length) cell mean within length, the same unit Section 8.1
-% argues for and the same one Table 8 uses. A pooled per-trial matrix is
+% argues for and the same one Table 4 uses. A pooled per-trial matrix is
 % computed alongside it, because a metric pair can look related pooled and
 % unrelated within length for exactly the reason Section 8.3 sets out, and
 % the two must be visibly separate rather than silently averaged.
 %
-% Out-of-scope methods (Section 3.9) are excluded by default. They are two
+% Out-of-scope methods (Section 3.5) are excluded by default. They are two
 % leverage points in a field of twenty-odd, and Section 8.7 measures what
 % they do to a correlation; there is no reason to let them do it again here.
 %

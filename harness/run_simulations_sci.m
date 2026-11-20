@@ -219,8 +219,12 @@ function [stats_d, lastValid, paramsInt, burstConfig, erM] = run_single_trial( .
         if erM ~= ""; fprintf(strcat('\n ** ',erM,'\n'));  return;  end
 
         % RS encode
+        % eccMin, NOT eccReal: the decoder is given the same value, so
+        % neither side re-derives the code from a derived quantity. See the
+        % note in decodeRS_all. config.FECnShort is [] for a natural code.
         [encoded, ~, ~, ~, ~, ~, erM] = ...
-            encoderRS_CW(A, config.base, config.eccReal, config.padSymbol);
+            encoderRS_CW(A, config.base, config.eccMin, config.padSymbol, ...
+                         local_nshort(config));
         if erM ~= ""; fprintf(strcat('\n ** ',erM,'\n'));  return;  end
 
         lenEncoded = length(encoded);
@@ -243,8 +247,14 @@ function [stats_d, lastValid, paramsInt, burstConfig, erM] = run_single_trial( .
         if erM ~= ""; fprintf(strcat('\n ** ',erM,'\n'));  return;  end
 
         % RS decode (Without interleaving) - Baseline
+        % THE SAME CODE AS THE ENCODER'S, which this line did not use. It
+        % passed config.eccReal and no shortened length, so on a shortened
+        % code it built the mother code against a frame of shortened codewords and
+        % failed the whole-codeword check - every trial, hence an endless
+        % noise retry. The baseline defines CR's denominator, so it has to be
+        % the identical code, not merely a compatible one.
         [decoded_woInt, ~, ~, ~, ~, ~, ~, erM] = decoderRS_CW( ...
-           encodedNoisy, config.base, config.eccReal);
+           encodedNoisy, config.base, config.eccMin, local_nshort(config));
         if erM ~= ""; fprintf(strcat('\n ** ',erM,'\n'));  return;  end
         
         % Without interleaving error rate
@@ -278,7 +288,8 @@ function [stats_d, lastValid, paramsInt, burstConfig, erM] = run_single_trial( .
 
         % RS decode (with interleaving)
         [decoded_ns_all, ~, ~, ~, erM] = decodeRS_all( ...
-            params.intMethods, deinterleaved_all, config.base, config.eccReal);
+            params.intMethods, deinterleaved_all, config.base, config.eccMin, ...
+            local_nshort(config));
         if erM ~= ""; fprintf(strcat('\n ** ',erM,'\n'));  return;  end
 
         % With interleaving decode error rates
@@ -596,4 +607,14 @@ try
 catch ME
    erM = sprintf('%s: Error line %d: %s', ME.stack(1).name, ME.stack(1).line, ME.message);
 end
+end
+
+% -------------------------------------------------------------------------
+function ns = local_nshort(config)
+%LOCAL_NSHORT  The shortened codeword length, or [] for the natural code.
+%   A config written before shortening existed has no such field, and an
+%   absent field must mean "natural code" rather than an error, so that the
+%   four campaigns already recorded can still be re-run from their own
+%   saved config.
+   if isfield(config, 'FECnShort'), ns = config.FECnShort; else, ns = []; end
 end

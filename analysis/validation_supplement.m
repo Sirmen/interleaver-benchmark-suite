@@ -3,11 +3,11 @@ function R = validation_supplement(dataPath, opts)
 %
 %   R = validation_supplement(dataPath, struct('tableDir', tableDir))
 %
-% Recomputes the within-length (method, length) cell correlation of Table 8
+% Recomputes the within-length (method, length) cell correlation of Table 4
 % for the five design-time load statistics, under six readings of the same
 % campaign:
 %
-%   base     in-scope field, target RES            (= Table 8)
+%   base     in-scope field, target RES            (= Table 4)
 %   CR       in-scope field, target CR alone        (no rate term, no z-score)
 %   nonext   in-scope, the five frame-extending methods removed. BE = 1 for
 %            every remaining row, so within a condition RES is an increasing
@@ -18,12 +18,11 @@ function R = validation_supplement(dataPath, opts)
 %   lomo     base, recomputed 21 times with one method left out: the range of
 %            mean |rho| and of the pass count over the omissions
 %
-% The published metrics were computed for the same six readings from the
-% correlation_data files (pub_supplement.py); this file adds the design-time
-% ones, which need the permutations. delta_G and eta_ES are recomputed here
-% as well - all fourteen, so this one file reproduces every number of the
-% Section 8.7 paragraph; their "base" column must reproduce Table 8
-% (delta_G 0.909, eta_ES 0.913, ...), which checks the whole pipeline.
+% The design-time statistics need the permutations; the fourteen published
+% metrics are read from the correlation_data files and recomputed here as
+% well, so this one file reproduces every number of the
+% Section 8.7 paragraph; their "base" column must reproduce Table 4
+% (delta_G 0.924, eta_ES 0.924, ...), which checks the whole pipeline.
 %
 % Mean load per codeword = n * E / encodedLen, with E = noiseActual *
 % interleavedLen the corrupted-symbol count shared by all methods of a trial.
@@ -37,7 +36,7 @@ function R = validation_supplement(dataPath, opts)
    dataPath = char(dataPath);
    n = local_opt(opts, 'FECn', 15);
    t = local_opt(opts, 'FECt', 3);
-   minN = local_opt(opts, 'minN', 24 * n);          % same common support as Table 8
+   minN = local_opt(opts, 'minN', 24 * n);          % same common support as Table 4
    theta = local_opt(opts, 'threshold', 0.30);
    nDraw = local_opt(opts, 'nDraw', 15);
    OUTS = {'freqDeterm', 'freqRandom'};
@@ -45,7 +44,7 @@ function R = validation_supplement(dataPath, opts)
    ENSEMBLE = {'random', 'freqRandom'};
    DES = {'giniLoad', 12; 'meanMaxCW', 24; 'maxErrCW', 24; 'overT', 12; 'cvLoad', 24; 'giniLoad', 8};
    PUBREF = {'eta_ES', 'delta_G', 'S_ECC', 'delta_BS', 'eta_sep', 'laplacianEnergy', 'U_ECC', ...
-             'sepMin', 'adjCV', 'PSR', 'V_ECC', 'adjMin', 'S_sf', 'S_factor'};   % Table 8 order
+             'sepMin', 'adjCV', 'PSR', 'V_ECC', 'adjMin', 'S_sf', 'S_factor'};   % Table 4 order
 
    tableDir = local_opt(opts, 'tableDir', '');
    if isempty(tableDir) || exist(fullfile(char(tableDir), 'table_factors_precomputed.mat'), 'file') ~= 2
@@ -98,6 +97,15 @@ function R = validation_supplement(dataPath, opts)
       masks = {keep, keep, keep & ~ext, keep & loadCW <= t, keep & loadCW > t};
       tgts  = {'RES', 'CR', 'RES', 'RES', 'RES'};
       for vi = 1:numel(VAR)
+         % A reading can be empty by design: below capacity (the c15lo band,
+         % n*nu <= 2.7 < t) no trial has loadCW > t, so 'gt_t' has no cells.
+         % findgroups then returns no groups and splitapply refuses; the
+         % reading is undefined there, not an error (fix 18 Nov 2026).
+         if nnz(masks{vi}) == 0
+            if vi == 1, error('validation_supplement: no in-scope cells in %s', d(si).name); end
+            RHO(:, si, vi) = NaN;
+            continue;
+         end
          [X, y, gl, gm] = local_cells(D, meth, len, masks{vi}, tgts{vi}, cache, PUBREF);
          RHO(:, si, vi) = local_fz(X, y, gl);
          if vi == 1
@@ -157,7 +165,7 @@ function R = validation_supplement(dataPath, opts)
       end
       fprintf('   [%.3f, %.3f] %d-%d\n', min(mv), max(mv), min(pv), max(pv));
    end
-   fprintf(['\n  base must reproduce Table 8 for the published rows (delta_G 0.924, eta_ES 0.924);\n' ...
+   fprintf(['\n  base must reproduce Table 4 for the published rows (delta_G 0.924, eta_ES 0.924);\n' ...
             '  giniLoad (12n) may differ from 0.898 in the third decimal only, because\n' ...
             '  it is now exhaustive rather than subsampled.\n']);
    fprintf('  ratio giniLoad(12n)/delta_G per reading:');

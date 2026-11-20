@@ -6,8 +6,8 @@ authors:
     given-names: "Refik Tanju"
     affiliation: "Piri Reis University, Istanbul, Türkiye"
     orcid: "https://orcid.org/0000-0001-5014-4780"
-version: "1.0.6"
-date-released: "2026-10-25"                # MUST match the day the v1.0.6 tag is pushed
+version: "1.1.0"
+date-released: "2026-11-20"             # MUST match the day the v1.1.0 tag is pushed
 license: MIT
 repository-code: "https://github.com/Sirmen/interleaver-benchmark-suite"
 doi: "10.5281/zenodo.23170142"           # concept DOI; always resolves to the latest version
@@ -18,23 +18,22 @@ keywords:
   - Reed-Solomon codes
   - Gilbert-Elliott channel
   - design-time evaluation metrics
+  - parameter provenance
   - reproducible research
-  - benchmarking
   - MATLAB
 preferred-citation:
-  type: article
-  title: "Code-Aware Interleaver Metrics for Burst-Error Channels: Taxonomy and Validation on a Provenance-Governed Benchmark"
+  type: unpublished
+  title: "A Code-Aware Evaluation Framework for Interleavers Under Burst Errors: Metric Taxonomy, Validation, and Parameter Provenance"
   authors:
     - family-names: Sirmen
       given-names: "Refik Tanju"
+      orcid: "https://orcid.org/0000-0001-5014-4780"
   year: 2026
-  journal: "arXiv"                       # TODO: replace with the journal on acceptance
-  # TODO: on the arXiv id, uncomment and fill - the DOI form, not the bare id
-  # doi: "10.48550/arXiv.XXXX.XXXXX"
+  notes: "Manuscript. Replace with the journal reference on acceptance."
 references:
   - type: data
-    title: "Campaign data for the paper"
-    doi: "10.5281/zenodo.23136341"
+    title: "Interleaver benchmark suite: campaign data, primary RS(15,9) campaign and five further campaigns"
+    doi: "10.5281/zenodo.23136340"
     authors:
       - family-names: Sirmen
         given-names: "Refik Tanju"

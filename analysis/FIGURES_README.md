@@ -1,6 +1,9 @@
-# The seven figures
+# The six figures
 
-All seven go through `fig_style.m`, so they share type, weights, colour and
+The article has six figures. `fig7_bracket` draws Figure 6 (the file names keep
+the numbering of release 1.0.x). `fig6_resdecomp` is kept for the RES decomposition
+that Section 10.2 reports in the text; the article has no figure of it, so it is
+called with `draw = false` and only prints its table. All six figures go through `fig_style.m`, so they share type, weights, colour and
 export format. Each writes three files into `./figures`: a **PDF** (vector),
 an **EMF** (vector inside Word, for the .docx manuscript), and a 600 dpi PNG
 as a fallback for the cases where a vector import misbehaves.
@@ -15,12 +18,12 @@ or 7.16 in wide), so the type stays at 9 pt.
 ```matlab
 dataDir = 'path/to/campaign/results';   % the folder holding KPItableDetailed_*.mat
 
-% Figures 1 and 6 — both come out of one screen, so run it once each.
+% Figure 1, and the table of the RES decomposition of Section 10.2 (no figure)
 R1 = fig1_screen(dataDir);
-R6 = fig6_resdecomp(dataDir);   % also prints the reordering, for checking the text
+R6 = fig6_resdecomp(dataDir, struct('draw', false));   % prints the split and the reordering
 
 % Figures 4 and 5 — both read one scorecard. Run it ONCE and pass it in, so
-% the figures and Table 8 come from the same computation and cannot disagree.
+% the figures and Table 4 come from the same computation and cannot disagree.
 S  = metric_scorecard([], struct('dataDir', dataDir));
 O4 = fig4_bsweep(S);
 O5 = fig5_c5box(S);
@@ -28,9 +31,9 @@ O5 = fig5_c5box(S);
 % Figure 3
 fig_cnn_justification(dataDir, struct('save', true));
 
-% Figures 2 and 7 — no campaign data needed.
+% Figures 2 and 6 — no campaign data needed.
 fig2_taxonomy;
-O7 = fig7_bracket;              % ~200 permutations at N = 1200, under a minute
+O6 = fig7_bracket;              % ~200 permutations at N = 1200, under a minute
 ```
 
 You do not have to name the precomputed-table folder. `find_table_dir.m` looks
@@ -51,8 +54,7 @@ the figure says so rather than guessing.
 | 3 C_NN | 7.16 in, full width | two panels, (a) above (b) |
 | 4 B sweep | 3.5 in, one column | five curves, one axis |
 | 5 C5 boxes | 3.5 in, one column | grows with the metric count |
-| 6 RES decomposition | 3.5 in, one column | grows with the method count |
-| 7 bracket | 3.5 in, one column | one axis |
+| 6 bracket (`fig7_bracket`) | 3.5 in, one column | one axis |
 
 ## Type size
 
@@ -80,7 +82,7 @@ put the call at the top of a figure run to make it repeatable.
   admissibility criteria are called A1/A2 — they clashed with the predictions
   P1-P3 and with ARP's P0-P3 — so the axis reads "A1 at 0.25".
 - **Legends sit inside the axes** where the data leave room: Fig. 4 top left
-  (axis fixed at [0 1]), Fig. 6 top left over the empty negative half of the
+  (axis fixed at [0 1]), the RES decomposition top left over the empty negative half of the
   leading rows, Fig. 1 inside the right panel at the bottom centre. A legend
   inside the axes can only be placed where the data leave room, and that
   depends on the data, so check each PNG once.
@@ -105,9 +107,9 @@ end
 ## What the scripts check, and what you must check by eye
 
 The scripts verify what can be verified numerically: Figure 2 counts the
-metrics it names against the twenty-five the study scores, Figure 6 checks the
+metrics it names against the twenty-five the study scores, the RES decomposition checks the
 equation (4) identity, Figure 5 reproduces the `prctile` quantile definition
-so its boxes and the C5 column of Table 8 are the same statistic, and Figure 4
+so its boxes and the C5 column of Table 4 are the same statistic, and Figure 4
 reports the shape of each statistic in B (plateau, peak-then-fall, or swing).
 
 What they cannot check is collision: whether a label overlaps a marker at
@@ -115,11 +117,11 @@ What they cannot check is collision: whether a label overlaps a marker at
 
 ## Things to know before reading the output
 
-- **The scorecard defaults to the in-scope field.** Expect **924 cells, 44
-  lengths, 21 methods** on the common grid, and the run prints
+- **The scorecard defaults to the in-scope field.** Expect **1012 cells, 44
+  lengths, 23 methods** on the common grid, and the run prints
   `FIELD: in scope, ...` so it cannot be ambiguous. Asking for the full field
   prints a warning that those are the ablation numbers of Section 8.7; it
-  gives 1012 cells and coefficients up to 0.2 different, and those appear in
+  gives 1100 cells and coefficients up to 0.2 different, and those appear in
   no table.
 - **The bootstrap is seeded** per sweep, with the caller's stream restored
   afterwards, so the confidence intervals reproduce to the last digit.
@@ -132,10 +134,13 @@ What they cannot check is collision: whether a label overlaps a marker at
   the standards lengths, so every structural column is NaN there and the row
   reads "NOT SCREENED: no permutation at this length". At N = 1440, a
   standards length, it screens normally.
-- **The Gilbert-Elliott sweeps realize about 0.22 in every noise bin**
-  (`check_noise_fidelity`: slope 0.03-0.06, kappa 1.23 to 0.84), so treat the
-  bins there as replicates at one density. Single and multi honour their
-  labels exactly, and the two printing identical numbers is expected: in those
+- **Every regime realizes its noise label.** In the archived campaign the mean
+  realized density lies within 0.5% of the target in every bin and kappa
+  between 0.995 and 1.003 (`check_noise_fidelity`, Section 7.2). An earlier,
+  superseded campaign accepted Gilbert-Elliott masks anywhere in the noise grid
+  and realized about 0.22 in every bin; `config.ge_bandMode = 'grid'` restores
+  that behaviour, and nothing in the article uses it. Single and multi
+  printing identical numbers is expected: in those
   regimes the corrupted count is round(rho*N), which depends only on N and
   rho.
 - **A kappa-free reading is available** without re-simulating.
@@ -145,7 +150,7 @@ What they cannot check is collision: whether a label overlaps a marker at
 
   ```matlab
   K  = check_kappa_sensitivity(dataDir, struct('write', true));
-  S2 = metric_scorecard(fullfile(dataDir, 'kappa_free'));   % compare with Table 8
+  S2 = metric_scorecard(fullfile(dataDir, 'kappa_free'));   % compare with Table 4
   ```
 
   `write` copies the config and correlation_data files into

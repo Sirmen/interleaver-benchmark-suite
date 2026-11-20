@@ -6,10 +6,12 @@ function K = check_kappa_sensitivity(dataDir, opts)
 %
 % WHY
 % ===========================================================================
-% check_noise_fidelity showed that the four Gilbert-Elliott sweeps did not
-% realize their labelled noise: every bin received about 0.22, so kappa, the
-% realized-to-target density of a trial, runs from about 1.23 in the lowest
-% bin to 0.84 in the highest. By Lemma 1 C_NN_j = BE_j * kappa, so the CR of
+% kappa is the realized-to-target density of a trial. The script was written
+% for an earlier, superseded campaign whose Gilbert-Elliott sweeps did not
+% realize their labels (every bin about 0.22, kappa 1.23 to 0.84). In the
+% archived campaign kappa lies between 0.995 and 1.003 (Section 7.2), so what
+% it measures there is the rounding of the injected count (Section 8.7).
+% By Lemma 1 C_NN_j = BE_j * kappa, so the CR of
 % every method in a GE trial carries that factor. Within one trial it is
 % common to every method and cannot reorder them. RES, however, is
 % standardized over all cells of a condition, across bins, so kappa can move

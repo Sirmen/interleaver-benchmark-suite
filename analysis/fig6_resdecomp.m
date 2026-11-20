@@ -1,5 +1,6 @@
 function R = fig6_resdecomp(dataDir, opts)
-%FIG6_RESDECOMP  Figure 6: what the bottom of the ranking is actually paying for.
+%FIG6_RESDECOMP  The RES decomposition of Section 10.2: what the foot of the composite pays for.
+%   (Figure 6 in release 1.0.x; the current article reports the decomposition in the text.)
 %
 %   R = fig6_resdecomp('<resultsDir>')
 %
@@ -16,7 +17,7 @@ function R = fig6_resdecomp(dataDir, opts)
 % to the composite exactly, and a stack shows a sum; a grouped pair invites
 % the reader to compare a recovery score against a rate score, which means
 % nothing. The bars are ordered by the composite, so the reading order IS the
-% ranking the paper reports and the rate term is seen to grow as it falls:
+% order of the composite and the rate term is seen to grow as it falls:
 % down the left block from the leader, then down the right block to the foot.
 %
 % THE TABLE THIS SCRIPT ALSO PRINTS
@@ -246,7 +247,7 @@ function R = fig6_resdecomp(dataDir, opts)
    % a manuscript is a rank column that disagrees with the data by one.
    [~, oR] = sort([R.meanRES], 'descend'); rkR = zeros(1, n); rkR(oR) = 1:n;
    [~, oC] = sort(cr, 'descend');          rkC = zeros(1, n); rkC(oC) = 1:n;
-   fprintf('\n  THE REORDERING, for checking the claim in Section 9\n');
+   fprintf('\n  THE REORDERING, for checking the claim in Section 10.2\n');
    fprintf('  %-15s %9s %9s %9s %7s %7s %7s\n', 'Method', 'mean RES', ...
           'recovery', 'rate', 'rk RES', 'rk rec', 'gained');
    fprintf('  %s\n', repmat('-', 1, 70));

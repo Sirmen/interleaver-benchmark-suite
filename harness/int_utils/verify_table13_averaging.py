@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Reproduce Table 13's per-trial columns from the raw campaign files.
 
+Table 13 is the per-method reference-value table of manuscript v98 to release
+1.0.x (its Appendix A). The current article does not print it; the script is
+kept as a check of those archived values. Table and section numbers in this
+file are those of that manuscript.
+
 WHY THIS EXISTS
 ---------------------------------------------------------------------------
 Table 13's columns were recomputed for v98 because the a priori (n,t) cell

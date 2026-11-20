@@ -11,13 +11,19 @@ dependency_audit.txt
 *.mex*
 slprj/
 # campaign output: archived on Zenodo, not in git
-data/results/
+# data/ holds the unzipped archive (data/results, data/campaigns/<code>)
+data/
 results/
 figures/
+# logs and status file of harness/campaigns and of target_sensitivity
+campaign_logs/
 *.fig
 # large binaries
 *.mat
 !tables/*.mat
+# code2_build_table writes a backup of the table here before it changes it;
+# the negation above would otherwise put those backups in git
+tables/*_backup_*.mat
 # OS
 .DS_Store
 Thumbs.db

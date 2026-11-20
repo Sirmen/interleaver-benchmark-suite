@@ -27,10 +27,10 @@ function S = calc_snew_invperm(perm)
 % ---------------------------------------------------------------------------
 % It is the criterion the benchmark itself uses: DRP's stride and dither
 % vectors are not published at any length on either grid, so they are
-% re-searched under S_new, which IS published (Table 3 of the manuscript).
+% re-searched under S_new, which IS published (Section 3.3 of the article).
 % The benchmark therefore selects one method's parameters with a metric it did
 % not itself validate. Scoring it here closed that gap: S_new is a row of
-% Table 8, discarded on C2.
+% Table 4, discarded on C2.
 %
 % RELATION TO Sfactor
 % ---------------------------------------------------------------------------

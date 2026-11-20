@@ -13,6 +13,21 @@ function [interleaved_all, permutation_all, paramsInt, erM] = interleave_all_pc(
 %                - table_precomputed: precomputed interleaver table
 %                - table_primes, table_factors: for special interleavers
 
+% WHAT paramsInt.gridLK IS, ADDED 6 NOVEMBER 2026
+% ---------------------------------------------------------------------------
+% Every block records the (L,K) the dispatcher returned FOR THAT METHOD:
+%
+%       paramsInt.gridLK.(method) = [L K];
+%
+% It is written beside paramsInt.permutations.(method), so the grid travels
+% with the permutation instead of being recomputed later. collectStatistics_x
+% stores stats.L and stats.K, but those are paramsInt.L and paramsInt.K - the
+% harness's own estimate_L_for_size(lenEncoded) guess, IDENTICAL for every
+% method. Those two fields are left exactly as they were; gridL and gridK are
+% the per-method ones. A method absent from a run is absent from gridLK, and
+% collectStatistics_all writes NaN for it rather than borrowing another
+% method's number.
+
 erM = ""; % assume ok
 
 %% Extract interleaving parameters
@@ -50,6 +65,7 @@ if sum(ismember(intMethods, 'random')) > 0
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Lrandom = L;
                 paramsInt.Krandom = K;
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -76,6 +92,7 @@ if sum(ismember(intMethods, 'matrix')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Lmatrix = L;  
                 paramsInt.Kmatrix = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -102,6 +119,7 @@ if sum(ismember(intMethods, 'convolutional')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.bufferRows_conv = R;  
                 paramsInt.bufferSlope_conv = 1; % Default from precompute
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -128,6 +146,7 @@ if sum(ismember(intMethods, 'helicalScan')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.LhelicalScan = L;  
                 paramsInt.KhelicalScan = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -156,6 +175,7 @@ if sum(ismember(intMethods, 'helical')) > 0 && (erM == "")
                 paramsInt.Lhelical = L;  
                 paramsInt.Khelical = K;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -180,6 +200,7 @@ if sum(ismember(intMethods, 'turbo')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.turbo_strategy_info = struct(); % Strategy stored in precompute
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
@@ -205,6 +226,7 @@ if sum(ismember(intMethods, 'algebraic')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Lalg = L;  
                 paramsInt.Kalg = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -231,6 +253,7 @@ if sum(ismember(intMethods, 'block')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -264,6 +287,7 @@ for newM = {'blockCM', 'convCM'}
                interleaved_all.(method) = interleaved;
                permutation_all.(method) = permutation;
                paramsInt.permutations.(method) = permutation;
+               paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -300,6 +324,7 @@ if sum(ismember(intMethods, 'snake')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;
                 permutation_all.(method) = permutation;
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -324,6 +349,7 @@ if sum(ismember(intMethods, 'spiral')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Lspiral = L;  
                 paramsInt.Kspiral = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -350,6 +376,7 @@ if sum(ismember(intMethods, 'diagonal')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Ldiagonal = L;  
                 paramsInt.Kdiagonal = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -376,6 +403,7 @@ if sum(ismember(intMethods, 'hierarchical')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Lhierarchical = L;  
                 paramsInt.Khierarchical = K;  
                 paramsInt.Qhierarchical = Q;  
@@ -404,6 +432,7 @@ if sum(ismember(intMethods, 'multiDim')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.LmultiDim = L;  
                 paramsInt.KmultiDim = K;  
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -430,6 +459,7 @@ if sum(ismember(intMethods, 'latinSquare')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Llatin = L;
                 paramsInt.Klatin = K;
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -456,6 +486,7 @@ if sum(ismember(intMethods, 'time')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;  
                 permutation_all.(method) = permutation;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.Ltime = L;
                 paramsInt.Ktime = K;
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
@@ -487,6 +518,7 @@ if sum(ismember(intMethods, 'freqRandom')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -511,6 +543,7 @@ if sum(ismember(intMethods, 'freqDeterm')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -535,6 +568,7 @@ if sum(ismember(intMethods, 'chaotic')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;  
                 permutation_all.(method) = permutation;  
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -559,6 +593,7 @@ if sum(ismember(intMethods, 'prime')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.interleaveTime_sum.(method) = paramsInt.interleaveTime_sum.(method) + toc;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -604,6 +639,7 @@ if sum(ismember(intMethods, 'srandom')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;
                 permutation_all.(method) = permutation;
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.info_srandom = infoNew;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -640,6 +676,7 @@ if sum(ismember(intMethods, 'goldenRP')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;
                 permutation_all.(method) = permutation;
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.info_goldenRP = infoNew;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -677,6 +714,7 @@ if sum(ismember(intMethods, 'drp')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;
                 permutation_all.(method) = permutation;
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.info_drp = infoNew;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -715,6 +753,7 @@ if sum(ismember(intMethods, 'arp')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved;
                 permutation_all.(method) = permutation;
                 paramsInt.permutations.(method) = permutation;
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.info_arp = infoNew;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;
             else
@@ -787,6 +826,7 @@ if sum(ismember(intMethods, 'S')) > 0 && (erM == "")
                 interleaved_all.(method) = interleaved; 
                 permutation_all.(method) = permutation; 
                 paramsInt.permutations.(method) = permutation; 
+                paramsInt.gridLK.(method) = [L K];   % the grid THIS method used
                 paramsInt.LsMs = L;
                 paramsInt.KsMs = K;
                 paramsInt.testCount.(method) = paramsInt.testCount.(method) + 1;

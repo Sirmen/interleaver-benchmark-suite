@@ -126,7 +126,7 @@ function fig2_taxonomy(opts)
    % line of height and said what the caption already says.
    % The Section 8 verdict is deliberately NOT drawn. Provenance and outcome
    % are orthogonal, the figure argues the taxonomy, and the verdict has three
-   % objects of its own (Tables 10 and 11, Fig. 5). Do not add a second mark.
+   % objects of its own (Tables 4 and 5, Fig. 5). Do not add a second mark.
    % The marker is '*' and not '\dagger' on purpose: the dagger is not in the
    % TeX subset MATLAB's text interpreter accepts, and an unsupported command
    % is printed verbatim rather than raising an error.

@@ -6,23 +6,21 @@ function E = design_metric_extension(dataPath, opts)
 %
 % WHAT THIS ADDS
 % ---------------------------------------------------------------------------
-% The published suite scores twenty-five metrics (Table 8). Five further a
-% priori measures from the classical interleaver literature were scored here
-% first; four of them - Snew, S_ach, B_guar and esLoad - were then taken into
-% the suite, and dispersion is the one that remains outside it:
+% The suite scores twenty-five metrics (Table 4). The a priori measures below
+% were scored here first and then taken into it: dispersion (gamma, Section
+% 6.8), Snew, S_ach, B_guar and esLoad, and adjDisp as adj_gamma:
 %
 %   dispersion  Heegard-Wicker, restated as equation (14) of Takeshita and
 %               Costello 2000. Fraction of distinct displacement vectors. This
-%               is the quality measure [14] ACTUALLY uses: that paper defines
-%               no spread factor, so the metric the manuscript attributes to it
-%               in equation (9) is not in it, and the metric it does use is
-%               not in the suite. Validated against the source's own published
+%               is the quality measure that source uses. It defines no
+%               spread factor, which is why the article keeps gamma and the
+%               Euclidean Sfactor apart (Sections 6.3 and 6.8). Validated against the source's own published
 %               values (0.81 for random, 1 for a Costas array).
 %   Snew        Crozier 2000. The L1 combined spread the benchmark ITSELF uses
-%               to re-search DRP's stride and dither (Table 3), i.e. a metric
+%               to re-search DRP's stride and dither (Section 3.3), i.e. a metric
 %               the benchmark selects with but does not validate. The turbo
 %               literature's "spread" is this L1 form, not the Euclidean one
-%               that equation (9) of the manuscript computes, so this row also
+%               that Sfactor computes (Section 6.3), so this row also
 %               settles what the spread family actually scores.
 %   S_ach       Achieved S-random spread. srandom carries the published rule
 %               s = floor(sqrt(N/2)); the achieved value is defined for every
@@ -37,9 +35,8 @@ function E = design_metric_extension(dataPath, opts)
 %               criterion and has no counterpart defined for it. Read at the
 %               same burst length as the giniLoad anchor, so the two are
 %               directly comparable.
-%   adjDisp     The "Dispersion Factor (Gamma)" that analyzeDispersion.m
-%               computes and ships in the release without appearing in any
-%               table: distinct adjacent displacement magnitudes over N-1. It
+%   adjDisp     The "Dispersion Factor (Gamma)" of the original harness,
+%               scored in the article as adj_gamma (Section 6.8): distinct adjacent displacement magnitudes over N-1. It
 %               is the lag-1 restriction of dispersion, so running both says
 %               whether the all-pairs count buys anything.
 %
@@ -251,7 +248,7 @@ function E = design_metric_extension(dataPath, opts)
    % reverses sign between regimes still clears the threshold in each of them
    % and reads 8/8. RW already holds the signed per-condition values, so the
    % test costs nothing - it was simply never reported, which left the C4
-   % column of Table 10 unfillable from this script's output.
+   % column of Table 4 unfillable from this script's output.
    okC4 = false(1, nCol);
    for c = 1:nCol
       v = RW(~isnan(RW(:, c)), c);

@@ -1,5 +1,6 @@
 function out = fig7_bracket(opts)
-%FIG7_BRACKET  Figure 7: how to read a design-metric value, drawn once.
+%FIG7_BRACKET  Figure 6: how to read a design-metric value, drawn once.
+%   (The file name keeps the numbering of release 1.0.x, where this was Figure 7.)
 %
 %   out = fig7_bracket
 %   out = fig7_bracket(struct('N', 1200, 'metric', 'giniLoad', 'candidates', {{'S','drp'}}))
@@ -330,7 +331,7 @@ function s = local_verdict(v, vIdent, qs)
 end
 
 function q = local_q(v, p)
-% prctile convention, matching fig5_c5box and Table 10.
+% prctile convention, matching fig5_c5box and the C5 column of Table 4.
    v = sort(v(isfinite(v))); n = numel(v); q = nan(size(p));
    if n == 0, return; end
    if n == 1, q(:) = v; return; end
@@ -363,10 +364,10 @@ function p = local_perm(m, N, tp, tf, cfg) %#ok<INUSD>
          fprintf(2, '  S at N = %d: %s\n', N, e.message);
          p = [];
       end
+      return   % S is built with its campaign settings or not at all
    end
    try
       paramsInt = struct('permutationSeed', 1, 'minMultiplier', 2, ...
-                         'pairStrategy', 'balanced', 'swapStrategy', 'parity', ...
                          'extensionPercentage', 0.5);
       [~, p, ~, ~, ~, ~, erM] = interleaver_generic_pc(1:N, m, 0, 0.5, [], 1, tp, tf, paramsInt);
       % An empty permutation with a message is a failure, not an absence.

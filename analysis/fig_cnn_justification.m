@@ -37,17 +37,17 @@ function out = fig_cnn_justification(dataPath, opts)
 %
 % OPTIONS
 %   condition   which sweep to draw, as regime_grid, e.g. 'single_common'.
-%               Default: 'multi_common'. NOT a Gilbert-Elliott sweep:
-%               check_noise_fidelity showed those realize about 0.22 in
-%               every bin, so their five "noise levels" are one level and a
-%               panel drawn per bin from them would claim a range it does
-%               not have. single and multi honour their labels exactly.
+%               Default: 'multi_common'. single and multi realize
+%               round(rho*N) errors exactly. The Gilbert-Elliott sweeps of
+%               the archived campaign also realize their labels (Section
+%               7.2); the default dates from an earlier, superseded campaign
+%               whose Gilbert-Elliott bins all realized about 0.22.
 %   save        true to write a PNG and an EPS beside the data. Default false.
 %   figPath     where to write. Default: the same ./figures folder as every
 %               other figure, through fig_style.
 %   stem        file name without extension. Default 'fig3_cnn', the name
 %               the manuscript uses; the condition drawn is printed, not
-%               encoded in the name, so the seven files sit side by side.
+%               encoded in the name, so the figure files sit side by side.
 
    if nargin < 1 || isempty(dataPath)
       c = configure_simulation(); dataPath = char(c.dataSavePath);

@@ -1,5 +1,9 @@
 function T = dump_table13_ntcell(dataPath, tableDir, opts)
 %DUMP_TABLE13_NTCELL  Table 13's a priori (n,t) column, with its own check.
+%   Table 13 is the per-method reference-value table of manuscript v98 to
+%   release 1.0.x (its Appendix A). The current article does not print it;
+%   the script is kept as a check of those archived values. Table and
+%   section numbers in this file are those of that manuscript.
 %
 %   T = dump_table13_ntcell('<resultsDir>', '<tableDir>')
 %

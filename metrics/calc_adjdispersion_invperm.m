@@ -11,7 +11,7 @@ function gam = calc_adjdispersion_invperm(perm)
 % "Dispersion Factor (Gamma)". It shipped in the released suite while appearing
 % nowhere among the validated metrics, so a reader who opened the repository
 % found a dispersion measure that no table accounted for. Scoring it settled
-% that: it is the adj_gamma row of Table 8, discarded on C2.
+% that: it is the adj_gamma row of Table 4, discarded on C2.
 %
 % It is the LAG-1 RESTRICTION of dispersion (calc_dispersion_invperm), with
 % two further reductions: it keeps only adjacent pairs, and it takes the

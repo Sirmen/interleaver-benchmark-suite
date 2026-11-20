@@ -1,12 +1,38 @@
 function [stats, erM] = collectStatistics_x(config, method, A, L, K, encodedLen, noiseBin, ...
                                             permutation, interleaved, decoded, ...
-                                            burstConfig, noiseLocations, decErrRate_woInt)   
+                                            burstConfig, noiseLocations, decErrRate_woInt, ...
+                                            gridL, gridK)
+%COLLECTSTATISTICS_X  Per-trial statistics for one method.
+%
+% L AND K ARE NOT THIS METHOD'S GRID. They are paramsInt.L and paramsInt.K,
+% which run_simulations_sci sets from estimate_L_for_size(lenEncoded) once per
+% trial, so they are IDENTICAL for every method and describe none of them.
+% They are kept under those names because things downstream read them.
+%
+% gridL and gridK, added 6 November 2026, ARE this method's grid, taken from
+% paramsInt.gridLK.(method) which interleave_all_pc now records beside the
+% permutation. They are NaN for runs made before that date, and NaN is the
+% right answer there - the grid was never recorded, and borrowing paramsInt.L
+% would put a wrong number under a right-looking name.
 erM = ""; stats = [];
+if nargin < 14, gridL = NaN; end
+if nargin < 15, gridK = NaN; end
 try
    excludeZero = true;
    N = length(A);
    
-   eccConfig = configure_FEC_parameters(config.base, config.eccMin);
+   % THE DELIVERED CODE, SHORTENING INCLUDED (fix 18 Nov 2026). Without
+   % config.FECnShort this derived the MOTHER code: for the shortened
+   % RS(24,16) it returned n = 31, t = 5, so every a posteriori metric that
+   % partitions the frame into codewords (Delta_G, eta_ES, Delta_BS, S_ECC,
+   % U_ECC, V_ECC, S_sf) was computed on 31-symbol words while the decoder
+   % used 24. Natural codes (FECnShort empty) are unchanged.
+   nShortCS = [];
+   if isfield(config, 'FECnShort'), nShortCS = config.FECnShort; end
+   eccConfig = configure_FEC_parameters(config.base, config.eccMin, nShortCS);
+   if isfield(config, 'FECn') && eccConfig.n ~= config.FECn
+      error('collectStatistics_x: metric code n = %d, simulated code n = %d.', eccConfig.n, config.FECn);
+   end
    t = eccConfig.t_correct; % Maximum correction capacity per block [cite: 128]
    tau = eccConfig.eccReal; % Normalized capacity [cite: 128]
 
@@ -17,6 +43,8 @@ try
    % Standard Setup
    stats.method = method; 
    stats.L = L;  stats.K = K;  stats.N = N; stats.encodedLen = encodedLen;   
+   % the grid THIS method chose; see the header on why it is not L and K
+   stats.gridL = gridL;  stats.gridK = gridK;
    stats.interleavedLen = length(permutation);   
    stats.permutation = permutation;
    stats.noiseBin = noiseBin; % append noiseBin id

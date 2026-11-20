@@ -626,7 +626,10 @@ end
 function [inv, ok, why] = local_inventory(d, opts)
    inv = struct('file', {}, 'regime', {}, 'grid', {}, 'date', {});
    for i = 1:numel(d)
-      t = regexp(d(i).name, '^KPItableDetailed_([a-z0-9p]+)_([a-z]+)_(\d+)_', 'tokens', 'once');
+      % The grid token may carry digits ('code31', 'c15t2c'); with [a-z]+
+      % those files parsed as '?_?' and distinct conditions looked like one
+      % condition appearing several times.
+      t = regexp(d(i).name, '^KPItableDetailed_([a-z0-9p]+)_([a-z0-9]+)_(\d+)_', 'tokens', 'once');
       if isempty(t)
          inv(end+1) = struct('file', d(i).name, 'regime', '?', 'grid', '?', 'date', '?'); %#ok<AGROW>
       else
@@ -651,7 +654,7 @@ function [inv, ok, why] = local_inventory(d, opts)
 end
 
 function local_head(id, name, pass)
-   % Appendix B of the paper names these checks H0-H6 and A1-A4. The ids come
+   % Section S4 of the article's Supplementary Material names these checks H0-H6 and A1-A4. The ids come
    % from the struct field names, which are B0_conditions, B1_occupancy and so
    % on, and those are the function's returned interface - renaming them would
    % break every caller that reads H.blocking.B5_kpi. So the blocking ids are

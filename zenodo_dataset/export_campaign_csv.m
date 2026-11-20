@@ -10,9 +10,17 @@ function export_campaign_csv(dataDir, outDir, opts)
 %   KPItableDetailed_*.csv.gz  the same rows, readable without MATLAB
 %   correlation_data_*.mat   filtered the same way
 %   config_*, params_*, paramsInt_*, burstConfig_*, crossCorrResults_*  copied
-%   design_cells_v2.csv, KPI_SCOPE.txt, sweep_manifest.txt, analysis_*.txt  copied
+%   design_cells_*.csv, KPI_SCOPE.txt, sweep_manifest*.txt, analysis_*.txt,
+%   scorecard_metrics.csv  copied
 %
-% The originals are never modified.
+% The same function packs the primary campaign and each further campaign of
+% Section 8.9: the file names differ only in the condition token
+% (ge1p00_common_..., ge1p00_code31_..., ge1p00_c15t2c_...), which the
+% patterns below do not depend on. An empty file is skipped with a warning:
+% a zero-byte .mat is the remnant of an aborted save, not a result.
+%
+% The originals are never modified. When no method is dropped, the .mat files
+% are copied as they are; only a filtered file is saved again.
 %
 % METHODS THE PAPER DOES NOT REPORT
 % ===========================================================================
@@ -103,12 +111,23 @@ function export_campaign_csv(dataDir, outDir, opts)
          writetable(T, csv); gzip(csv); delete(csv);
          fprintf('   wrote %s.gz  (%d rows)\n', csv, height(T));
       end
-      save(fullfile(outDir, d(i).name), '-struct', 'S', '-v7.3');
+      % Nothing dropped: the original file is copied byte for byte. Saving it
+      % again as -v7.3 changes nothing in the data, takes minutes per file,
+      % and makes the archived file differ from the one the campaign wrote.
+      if isempty(drop)
+         copyfile(fullfile(dataDir, d(i).name), outDir);
+      else
+         save(fullfile(outDir, d(i).name), '-struct', 'S', '-v7.3');
+      end
    end
 
    % ---- 2. correlation_data, filtered the same way -------------------------
    c = dir(fullfile(dataDir, 'correlation_data_*.mat'));
    for i = 1:numel(c)
+      if isempty(drop)
+         copyfile(fullfile(dataDir, c(i).name), outDir);
+         continue
+      end
       S = load(fullfile(dataDir, c(i).name));
       S = local_drop(S, drop, c(i).name);
       save(fullfile(outDir, c(i).name), '-struct', 'S', '-v7.3');
@@ -117,11 +136,16 @@ function export_campaign_csv(dataDir, outDir, opts)
    % ---- 3. the small companions, copied as they are ------------------------
    plain = {'config_*.mat', 'params_*.mat', 'paramsInt_*.mat', 'burstConfig_*.mat', ...
             'crossCorrResults_*.mat', 'crossCorrResults_*.txt', 'KPI_SCOPE.txt', ...
-            'sweep_manifest.txt', 'design_cells_v2.csv', 'analysis_*.txt'};
+            'sweep_manifest*.txt', 'design_cells_*.csv', 'analysis_*.txt', ...
+            'scorecard_metrics.csv'};
    n = 0;
    for p = 1:numel(plain)
       f = dir(fullfile(dataDir, plain{p}));
       for i = 1:numel(f)
+         if f(i).bytes == 0
+            fprintf(2, '   skipped %s: empty file\n', f(i).name);
+            continue
+         end
          copyfile(fullfile(dataDir, f(i).name), outDir); n = n + 1;
       end
    end

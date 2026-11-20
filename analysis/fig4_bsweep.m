@@ -18,7 +18,7 @@ function out = fig4_bsweep(S, opts)
 % falls as the threshold saturates; the two codeword-load statistics keep
 % climbing to 24n. A protocol prescribing one B for all five reads two of
 % them off their own plateau, which is why Section 10.1 sends the reader to
-% the per-metric column of Table 10 instead.
+% the burst length Table 4 names for each statistic instead.
 %
 % One further thing the figure must show honestly: cvLoad is not monotone in
 % its own parameter. A metric whose value rises, falls and rises again as the
@@ -28,7 +28,7 @@ function out = fig4_bsweep(S, opts)
 %
 % INPUT
 %   S     the struct metric_scorecard returns. Passing it in rather than
-%         re-running the sweep matters: the figure and Table 8 then come from
+%         re-running the sweep matters: the figure and Table 4 then come from
 %         one computation, and cannot disagree.
 %
 % OPTIONS

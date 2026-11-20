@@ -1,9 +1,14 @@
-function codec = getRSCodec(kind, n, k, frameLen)
+function codec = getRSCodec(kind, n, k, frameLen, shortK)
 %GETRSCODEC  One owner for the RS System objects. Built once, reused.
 %
 %   dec = getRSCodec('decoder', n, k, frameLen)
 %   enc = getRSCodec('encoder', n, k)          frameLen defaults to k
 %   getRSCodec('clear')                        drop both, release them
+%
+%   A fifth argument shortK requests a SHORTENED code. n and k are then the
+%   MOTHER code's lengths and shortK is the delivered message length, so the
+%   object encodes shortK symbols into n - (k - shortK) and the frame is made
+%   of codewords of that shorter length. Omit it for the natural code.
 %
 % WHY A SEPARATE FUNCTION AND NOT A FIELD IN config
 % ---------------------------------------------------------------------------
@@ -65,7 +70,15 @@ function codec = getRSCodec(kind, n, k, frameLen)
          % and changes with N. Rebuild only when it actually changes: within
          % one trial all 24 methods share a length, so this fires once per
          % encoded length, not once per call.
-         key = [n, k, frameLen];
+         % shortK is part of the key. Two codes that share (n,k,frameLen)
+         % but differ in the shortened message length are different objects,
+         % and a cache that ignored it would hand back the wrong one.
+         if nargin < 5 || isempty(shortK), sK = k; else, sK = shortK; end
+         if sK > k || sK < 1
+            error(['getRSCodec: shortK = %d is not a valid shortened message ' ...
+                   'length for a mother code with k = %d.'], sK, k);
+         end
+         key = [n, k, frameLen, sK];
          if isempty(DEC) || ~isequal(decKey, key)
             if ~isempty(DEC), release(DEC); end
             DEC = comm.RSDecoder;
@@ -73,6 +86,9 @@ function codec = getRSCodec(kind, n, k, frameLen)
             DEC.MessageLength = k;
             DEC.CodewordLength = n;
             DEC.NumCorrectedErrorsOutputPort = true;
+            if sK < k
+               DEC.ShortMessageLength = sK;
+            end
             decKey = key;
          end
          codec = DEC;
@@ -82,13 +98,21 @@ function codec = getRSCodec(kind, n, k, frameLen)
          % the encoder's input size is always k. It never needs releasing for
          % a length change - only if (n,k) themselves change, which they do
          % not during a sweep.
-         key = [n, k];
+         if nargin < 5 || isempty(shortK), sK = k; else, sK = shortK; end
+         if sK > k || sK < 1
+            error(['getRSCodec: shortK = %d is not a valid shortened message ' ...
+                   'length for a mother code with k = %d.'], sK, k);
+         end
+         key = [n, k, sK];
          if isempty(ENC) || ~isequal(encKey, key)
             if ~isempty(ENC), release(ENC); end
             ENC = comm.RSEncoder;
             ENC.BitInput = false;
             ENC.MessageLength = k;
             ENC.CodewordLength = n;
+            if sK < k
+               ENC.ShortMessageLength = sK;
+            end
             encKey = key;
          end
          codec = ENC;

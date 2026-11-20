@@ -28,7 +28,9 @@ function R = check_noise_fidelity(dataDir, opts)
 % density of about 0.22 in EVERY bin. If that reading is right, the five
 % noise levels in that condition are one noise level with five labels, and
 % the reason is in the generator, not in C_NN. A reading off a picture is
-% not evidence. This measures it, per condition and per bin.
+% not evidence. This measures it, per condition and per bin. (That reading
+% came from an earlier, superseded campaign. In the archived campaign every
+% bin realizes its target to within 0.5%, Section 7.2.)
 %
 % WHAT IT REPORTS
 %   per bin     target rho, mean realized density of the methods that do not
